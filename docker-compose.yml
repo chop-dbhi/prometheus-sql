@@ -1,0 +1,16 @@
+sqlagent:
+    image: dbhi/sql-agent
+
+
+prometheussql:
+    image: dbhi/prometheus-sql
+
+    links:
+        - sqlagent:sqlagent
+
+    ports:
+        - 8080:8080
+
+    # Specify where the queries file is mounted on the host.
+    # volumes:
+    #    - /path/to/queries.yml:/queries.yml

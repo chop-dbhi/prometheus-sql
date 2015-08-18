@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -11,162 +9,146 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/net/context"
+	"gopkg.in/tylerb/graceful.v1"
 	"gopkg.in/yaml.v2"
 )
 
-// In-memory cache of previous state of the records so the metrics
-// can be produced.
 var (
-	metrics = NewSetMetrics()
-
-	previousState *Set
+	DefaultTimeout  = time.Minute
+	DefaultInterval = time.Minute * 5
 )
 
-func init() {
-	metrics.Register()
-}
-
-type config struct {
+// Query defines a SQL statement and parameters as well as configuration
+// for the monitoring behavior and result comparison.
+type Query struct {
+	Name       string
+	Path       string
 	Driver     string
 	Connection map[string]interface{}
 	SQL        string
 	Params     map[string]interface{}
+	Identifier string
+	Interval   time.Duration
+	Timeout    time.Duration
 }
 
-func yamlToJSON(r io.Reader) ([]byte, error) {
-	var (
-		err error
-		b   []byte
-		buf bytes.Buffer
+func decodeQueries(r io.Reader) (map[string]*Query, error) {
+	queries := make(map[string]*Query)
 
-		config config
-	)
-
-	if b, err = ioutil.ReadAll(r); err != nil {
-		return nil, err
-	}
-
-	if err = yaml.Unmarshal(b, &config); err != nil {
-		return nil, err
-	}
-
-	if err = json.NewEncoder(&buf).Encode(config); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func getState(key string, url string, body []byte) (*Set, error) {
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	b, err := ioutil.ReadAll(r)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if resp.StatusCode != 200 {
-		return nil, errors.New("service unreachable")
-	}
-
-	var records []record
-
-	defer resp.Body.Close()
-
-	if err = json.NewDecoder(resp.Body).Decode(&records); err != nil {
+	if err = yaml.Unmarshal(b, &queries); err != nil {
 		return nil, err
 	}
 
-	return NewSet(key, records)
+	for k, q := range queries {
+		// Set name and path.
+		if len(k) > 0 && k[0] == '/' {
+			q.Name = k[1:]
+			q.Path = k
+		} else {
+			q.Name = k
+			q.Path = "/" + k
+		}
+
+		if q.Driver == "" {
+			return nil, errors.New("driver is required")
+		}
+
+		if q.SQL == "" {
+			return nil, errors.New("SQL statement required")
+		}
+
+		if q.Identifier == "" {
+			return nil, errors.New("identifier required")
+		}
+
+		if q.Interval == 0 {
+			q.Interval = DefaultInterval
+		}
+
+		if q.Timeout == 0 {
+			q.Timeout = DefaultTimeout
+		}
+	}
+
+	return queries, nil
 }
 
 func main() {
 	var (
-		host       string
-		port       int
-		service    string
-		options    string
-		interval   time.Duration
-		identifier string
+		host        string
+		port        int
+		service     string
+		queriesFile string
 	)
 
 	flag.StringVar(&host, "host", "", "Host of the service.")
 	flag.IntVar(&port, "port", 8080, "Port of the service.")
-	flag.StringVar(&service, "service", "", "Endpoint of SQL agent service.")
-	flag.StringVar(&options, "options", "sql.yml", "Path to file containing SQL agent options.")
-	flag.DurationVar(&interval, "interval", time.Hour, "Interval of pull.")
-	flag.StringVar(&identifier, "identifier", "", "Column name of the unique identifier.")
+	flag.StringVar(&service, "service", "", "Query of SQL agent service.")
+	flag.StringVar(&queriesFile, "queries", "queries.yml", "Path to file containing queries.")
 
 	flag.Parse()
 
 	if service == "" {
-		log.Fatal("endpoint to SQL agent service required.")
+		log.Fatal("URL to SQL Agent service required.")
 	}
 
-	if identifier == "" {
-		log.Fatal("identifier column required.")
-	}
-
-	// Read options for request body.
-	file, err := os.Open(options)
+	// Read queries for request body.
+	file, err := os.Open(queriesFile)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	payload, err := yamlToJSON(file)
+	queries, err := decodeQueries(file)
+
 	file.Close()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	go func() {
-		var err error
+	// Wait group of queries.
+	wg := new(sync.WaitGroup)
+	wg.Add(len(queries))
 
-		t0 := time.Now()
+	// Shared context. Close the cxt.Done channel to stop the workers.
+	cxt, cancel := context.WithCancel(context.Background())
 
-		log.Print("Fetching initial state...")
+	var w *Worker
 
-		previousState, err = getState(identifier, service, payload)
+	mux := http.NewServeMux()
 
-		if err != nil {
-			log.Fatalf("Error fetching state: %s", err)
-		}
+	for _, q := range queries {
+		// Create a new worker and start it in its own goroutine.
+		w = NewWorker(q)
+		go w.Start(context.WithValue(cxt, "wg", wg), service)
 
-		log.Printf("Fetch took %v", time.Now().Sub(t0))
+		mux.Handle(fmt.Sprintf("/state/%s", q.Name), w.StateHandler())
 
-		ticker := time.NewTicker(interval)
+	}
 
-		for {
-			select {
-			case <-ticker.C:
-				log.Print("Fetching state...")
-				t0 = time.Now()
-
-				newState, err := getState(identifier, service, payload)
-
-				if err != nil {
-					log.Printf("Error fetching state: %s", err)
-					break
-				}
-
-				log.Printf("Fetch took %v", time.Now().Sub(t0))
-
-				previousState.Compare(metrics, newState)
-				previousState = newState
-
-				log.Printf("Logged metrics")
-			}
-		}
-	}()
-
-	http.Handle("/metrics", prometheus.Handler())
+	// Register the handler.
+	mux.Handle("/metrics", prometheus.Handler())
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	log.Printf("* Listening on %s...", addr)
 
-	http.ListenAndServe(addr, nil)
+	// Handles OS kill and interrupt.
+	graceful.Run(addr, 5*time.Second, mux)
+
+	log.Print("canceling workers")
+	cancel()
+	log.Print("waiting for workers to finish")
+	wg.Wait()
 }

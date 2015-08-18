@@ -1,0 +1,43 @@
+# File that defines endpoints for exposing Prometheus metrics for SQL result sets.
+# It talks to a [SQL Agent](https://github.com/chop-dbhi/sql-agent) service that
+# performs the query against the target database and returns the result set.
+# The `driver`, `connection`, `sql`, and `params` options defined for each endpoint
+# are passed to the service to execute the query. The other options are specific
+# to this service.
+
+# Name of the endpoint. It will be accessible at /query.
+query:
+    # Name of the driver to use.
+    driver: postgresql
+
+    # Connection information.
+    connection:
+        host: example.org
+        port: 5432
+        user: postgres
+        password: s3cre7
+        database: products
+
+    # SQL string. Parameters are name-based (not positional) and must be
+    # prefixed with a colon. See `:category_id` in the query below for an example.
+    sql: >
+        select product_id
+        from product
+            inner join product_category
+                on (product.category_id = product_category.id)
+            inner join product_category_idx
+                on (product_category.id = product_category_idx.category_id)
+        where product_category_idx.category_id = :category_id
+            or product_category_idx.ancestor_category_id = :category_id
+
+    # Parameter values by name.
+    params:
+        category_id: 5
+
+    # Column in result set that uniquely identifies a record. This is required
+    # to properly identify which rows have changed since the last execution.
+    identifier: product_id
+
+    # The time between query execution. This should be set relative to the frequency
+    # of expected updates and the required granularity of changes.
+    interval: 1h
