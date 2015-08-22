@@ -39,13 +39,24 @@ func (w *Worker) Fetch(url string) (*Set, error) {
 	var (
 		t    time.Time
 		err  error
+		req  *http.Request
 		resp *http.Response
 	)
 
 	for {
 		t = time.Now()
 
-		resp, err = w.client.Post(url, "application/json", bytes.NewBuffer(w.payload))
+		req, err = http.NewRequest("POST", url, bytes.NewBuffer(w.payload))
+
+		if err != nil {
+			panic(err)
+		}
+
+		// Set the content-type of the request body and accept LD-JSON.
+		req.Header.Set("content-type", "application/json")
+		req.Header.Set("accept", "application/json")
+
+		resp, err = w.client.Do(req)
 
 		// No formal error, but a non-successful status code. Construct an error.
 		if err == nil && resp.StatusCode != 200 {
