@@ -131,12 +131,7 @@ func NewSet(key string, records []record) (*Set, error) {
 			return nil, ErrInvalidIdentifier
 		}
 
-		switch x := idv.(type) {
-		case string:
-			id = x
-		default:
-			return nil, fmt.Errorf("bad identifier type. expected string, got %T", idv)
-		}
+		id = fmt.Sprint(idv)
 
 		if _, ok := s.index[id]; ok {
 			return nil, ErrDuplicateItem
