@@ -32,7 +32,6 @@ type Query struct {
 	Connection map[string]interface{}
 	SQL        string
 	Params     map[string]interface{}
-	Identifier string
 	Interval   time.Duration
 	Timeout    time.Duration
 }
@@ -49,7 +48,6 @@ func decodeQueries(r io.Reader) (map[string]*Query, error) {
 	if err = yaml.Unmarshal(b, &queries); err != nil {
 		return nil, err
 	}
-
 	for k, q := range queries {
 		// Set name and path.
 		if len(k) > 0 && k[0] == '/' {
@@ -66,10 +64,6 @@ func decodeQueries(r io.Reader) (map[string]*Query, error) {
 
 		if q.SQL == "" {
 			return nil, errors.New("SQL statement required")
-		}
-
-		if q.Identifier == "" {
-			return nil, errors.New("identifier required")
 		}
 
 		if q.Interval == 0 {
@@ -133,9 +127,6 @@ func main() {
 		// Create a new worker and start it in its own goroutine.
 		w = NewWorker(q)
 		go w.Start(context.WithValue(cxt, "wg", wg), service)
-
-		mux.Handle(fmt.Sprintf("/state/%s", q.Name), w.StateHandler())
-
 	}
 
 	// Register the handler.

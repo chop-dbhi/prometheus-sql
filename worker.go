@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -27,15 +28,14 @@ var defaultBackoff = backoff.Backoff{
 
 type Worker struct {
 	query   *Query
-	state   *Set
 	payload []byte
 	client  *http.Client
-	metrics *SetMetrics
+	result  *QueryResult
 	log     *log.Logger
 	backoff backoff.Backoff
 }
 
-func (w *Worker) Fetch(url string) (*Set, error) {
+func (w *Worker) Fetch(url string) (records, error) {
 	var (
 		t    time.Time
 		err  error
@@ -81,30 +81,32 @@ func (w *Worker) Fetch(url string) (*Set, error) {
 
 	w.log.Printf("Fetch took %s", time.Now().Sub(t))
 
-	var records []record
+	var recs []record
 
 	defer resp.Body.Close()
 
-	if err = json.NewDecoder(resp.Body).Decode(&records); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&recs); err != nil {
 		return nil, err
 	}
 
-	return NewSet(w.query.Identifier, records)
+	// queries should return only one record
+	if len(recs) > 1 {
+		return nil, errors.New("There is more than one line in the query result")
+	}
+	if len(recs[0]) > 1 {
+		return nil, errors.New("There is more than one column in the query result")
+	}
+
+	return recs, nil
 }
 
 func (w *Worker) Start(cxt context.Context, url string) {
-	state, err := w.Fetch(url)
-
+	recs, err := w.Fetch(url)
 	if err != nil {
-		w.log.Printf("Error fetching state: %s", err)
+		w.log.Printf("Error fetching records: %s", err)
 	}
 
-	// Set the initial state.
-	w.state = state
-
-	if state != nil {
-		w.metrics.Compare(nil, state)
-	}
+	w.result.SetMetrics(recs)
 
 	ticker := time.NewTicker(w.query.Interval)
 
@@ -117,33 +119,14 @@ func (w *Worker) Start(cxt context.Context, url string) {
 			return
 
 		case <-ticker.C:
-			if state, err = w.Fetch(url); err != nil {
-				w.log.Printf("Error fetching state: %s", err)
+			if recs, err = w.Fetch(url); err != nil {
+				w.log.Printf("Error fetching records: %s", err)
 				break
 			}
 
 			// Compare with new state and log metrics.
-			w.metrics.Compare(w.state, state)
-			w.state = state
+			w.result.SetMetrics(recs)
 		}
-	}
-}
-
-// StateHandler returns an http.HandlerFunc that writes the state of the query.
-func (w *Worker) StateHandler() http.HandlerFunc {
-	return func(rp http.ResponseWriter, _ *http.Request) {
-		if w.state == nil {
-			rp.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		if err := json.NewEncoder(rp).Encode(w.state.records); err != nil {
-			rp.WriteHeader(http.StatusInternalServerError)
-			rp.Write([]byte(err.Error()))
-			return
-		}
-
-		rp.Header().Set("content-type", "application/json")
 	}
 }
 
@@ -163,7 +146,7 @@ func NewWorker(q *Query) *Worker {
 
 	return &Worker{
 		query:   q,
-		metrics: NewSetMetrics(q.Name),
+		result:  NewQueryResult(q.Name),
 		payload: payload,
 		backoff: defaultBackoff,
 		log:     log.New(os.Stderr, fmt.Sprintf("[%s] ", q.Name), log.LstdFlags),
