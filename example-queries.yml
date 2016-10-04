@@ -20,8 +20,9 @@ query:
 
     # SQL string. Parameters are name-based (not positional) and must be
     # prefixed with a colon. See `:category_id` in the query below for an example.
+    # Must return single row, single column
     sql: >
-        select product_id
+        select count(product_id)
         from product
             inner join product_category
                 on (product.category_id = product_category.id)
@@ -33,10 +34,6 @@ query:
     # Parameter values by name.
     params:
         category_id: 5
-
-    # Column in result set that uniquely identifies a record. This is required
-    # to properly identify which rows have changed since the last execution.
-    identifier: product_id
 
     # The time between query execution. This should be set relative to the frequency
     # of expected updates and the required granularity of changes.

@@ -91,7 +91,7 @@ func (w *Worker) Fetch(url string) (records, error) {
 
 	// queries should return only one record
 	if len(recs) > 1 {
-		return nil, errors.New("There is more than one line in the query result")
+		return nil, errors.New("There is more than one row in the query result")
 	}
 	if len(recs[0]) > 1 {
 		return nil, errors.New("There is more than one column in the query result")

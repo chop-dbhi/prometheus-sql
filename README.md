@@ -18,12 +18,11 @@ This is a prototype and may be merged into the SQL Agent repo directly.
 - Failed queries are automatically retried using a [backoff](https://en.wikipedia.org/wiki/Exponential_backoff) mechanism.
 - The result set of each query is held in memory for a subsequent comparison.
 - Metrics are emitted for each query using a label (see [caveats](#caveats) below).
-- The state of a query is exposed at `/state/<query>`
 
 ## Install
 
 ```
-go get -u github.com/chop-dbhi/prometheus-sql
+go get -u github.com/peakgames/prometheus-sql
 ```
 
 ## Usage
