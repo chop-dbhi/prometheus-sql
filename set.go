@@ -39,11 +39,16 @@ func (r *QueryResult) SetMetrics(recs records) {
 
 	for _, v := range recs[0] {
 
-		if s, ok := v.(string); ok {
-			f, err := strconv.ParseFloat(s, 64)
+		switch t := v.(type) {
+		case string:
+			f, err := strconv.ParseFloat(t, 64)
 			if err == nil {
 				r.Result.Set(f)
 			}
+		case int:
+			r.Result.Set(float64(t))
+		case float64:
+			r.Result.Set(t)
 		}
 	}
 }
