@@ -161,6 +161,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if len(queries) == 0 {
+		log.Fatal("No queries loaded!")
+	}
+
 	// Wait group of queries.
 	wg := new(sync.WaitGroup)
 	wg.Add(len(queries))

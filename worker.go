@@ -124,7 +124,7 @@ func (w *Worker) Start(cxt context.Context, url string) {
 				break
 			}
 
-			// Compare with new state and log metrics.
+			// Log metrics.
 			w.result.SetMetrics(recs)
 		}
 	}
