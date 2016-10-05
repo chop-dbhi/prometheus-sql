@@ -1,14 +1,10 @@
 # Prometheus SQL
 
-[![GoDoc](https://godoc.org/github.com/chop-dbhi/prometheus-sql?status.svg)](https://godoc.org/github.com/chop-dbhi/prometheus-sql)
+[![GoDoc](https://godoc.org/github.com/peakgames/prometheus-sql?status.svg)](https://godoc.org/github.com/peakgames/prometheus-sql)
 
 Service that generates basic metrics for SQL result sets and exposing them as Prometheus metrics.
 
-This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) service to execute and return the SQL result sets.
-
-## Status
-
-This is a prototype and may be merged into the SQL Agent repo directly.
+This service relies on the [SQL Agent](https://github.com/peakgames/sql-agent) service to execute and return the SQL result sets.
 
 ## Behavior
 
@@ -16,8 +12,7 @@ This is a prototype and may be merged into the SQL Agent repo directly.
 - Each query has a designated worker for execution.
 - An interval is used to define how often to execute the query.
 - Failed queries are automatically retried using a [backoff](https://en.wikipedia.org/wiki/Exponential_backoff) mechanism.
-- The result set of each query is held in memory for a subsequent comparison.
-- Metrics are emitted for each query using a label (see [caveats](#caveats) below).
+- Metrics are emitted for each query using a label.
 
 ## Build
 
@@ -69,8 +64,3 @@ To view a plain text version of the metrics, open up the browser to the http://l
 ### Compose
 
 Alternately, use the `docker-compose.yml` file included in this repository. The `volumes` section be added for mounting the `queries.yml` file.
-
-
-## Caveats
-
-Currently, the Prometheus client library does not support creating a separate registry (of metrics) for each query, so metrics are differentiated using a `query:<name>` label. The side effect to this is that there is a single endpoint for all queries rather than one endpoint per query. See [prometheus/client_golang#46](https://github.com/prometheus/client_golang/issues/46) for details.
