@@ -39,6 +39,13 @@ or for an alternate path, use the `-queries` option:
 prometheus-sql -queries /path/to/queries.yml
 ```
 
+or `-queryDir`, which will load all `*.yml` files in a directory:
+
+```
+prometheus-sql -queryDir /path/to/queries
+```
+
+
 ## Docker
 
 Run the SQL agent service.

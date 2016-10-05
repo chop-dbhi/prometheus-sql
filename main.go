@@ -16,6 +16,7 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/tylerb/graceful.v1"
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 var (
@@ -78,18 +79,52 @@ func decodeQueries(r io.Reader) (map[string]*Query, error) {
 	return queries, nil
 }
 
+func decodeQueriesInDir(path string) (map[string]*Query, error) {
+	queries := make(map[string]*Query)
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range files {
+		fn := f.Name()
+		if strings.HasSuffix(fn, ".yml") {
+			fn := fmt.Sprintf("%s/%s", strings.TrimRight(path, "/"), fn)
+			log.Println("Loading", fn)
+			file, err := os.Open(fn)
+			if err != nil {
+				return nil, err
+			}
+			q, err := decodeQueries(file)
+			if err != nil {
+				return nil, err
+			}
+			for k, v := range q {
+				if queries[k] != nil {
+					return nil, errors.New(fmt.Sprintf("Query %s already defined", k))
+				}
+				queries[k] = v
+			}
+
+			file.Close()
+		}
+	}
+	return queries, nil
+}
+
 func main() {
 	var (
 		host        string
 		port        int
 		service     string
 		queriesFile string
+		queryDir    string
 	)
 
 	flag.StringVar(&host, "host", "", "Host of the service.")
 	flag.IntVar(&port, "port", 8080, "Port of the service.")
 	flag.StringVar(&service, "service", "", "Query of SQL agent service.")
 	flag.StringVar(&queriesFile, "queries", "queries.yml", "Path to file containing queries.")
+	flag.StringVar(&queryDir, "queryDir", "", "Path to directory containing queries.")
 
 	flag.Parse()
 
@@ -97,17 +132,31 @@ func main() {
 		log.Fatal("URL to SQL Agent service required.")
 	}
 
-	// Read queries for request body.
-	file, err := os.Open(queriesFile)
-
-	if err != nil {
-		log.Fatal(err)
+	if queriesFile == "queries.yml" && queryDir != "" {
+		queriesFile = ""
+	}
+	if queriesFile != "" && queryDir != "" {
+		log.Fatal("You can specify either -queries or -queryDir")
 	}
 
-	queries, err := decodeQueries(file)
+	var (
+		err     error
+		queries map[string]*Query
+	)
+	if queryDir != "" {
+		queries, err = decodeQueriesInDir(queryDir)
+	} else {
+		// Read queries for request body.
+		file, err := os.Open(queriesFile)
 
-	file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		queries, err = decodeQueries(file)
+
+		file.Close()
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
