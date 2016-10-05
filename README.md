@@ -19,11 +19,16 @@ This is a prototype and may be merged into the SQL Agent repo directly.
 - The result set of each query is held in memory for a subsequent comparison.
 - Metrics are emitted for each query using a label (see [caveats](#caveats) below).
 
-## Install
+## Build
 
 ```
-go get -u github.com/peakgames/prometheus-sql
+go build
 ```
+
+### Dependencies
+
+Go dependencies are provided in the `vendor` dir. To update or restore dependencies, use [gvt](https://github.com/FiloSottile/gvt).
+
 
 ## Usage
 
