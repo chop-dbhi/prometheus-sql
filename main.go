@@ -35,9 +35,11 @@ type Query struct {
 	Timeout    time.Duration
 	DataField  string `yaml:"data-field"`
 }
+type QueryList []*Query
 
-func decodeQueries(r io.Reader) (map[string]*Query, error) {
-	queries := make(map[string]*Query)
+func decodeQueries(r io.Reader) (QueryList, error) {
+	queries := make(QueryList, 0)
+	parsedQueries := make([]map[string]*Query, 0)
 
 	b, err := ioutil.ReadAll(r)
 
@@ -45,36 +47,39 @@ func decodeQueries(r io.Reader) (map[string]*Query, error) {
 		return nil, err
 	}
 
-	if err = yaml.Unmarshal(b, &queries); err != nil {
+	if err = yaml.Unmarshal(b, &parsedQueries); err != nil {
 		return nil, err
 	}
-	for k, q := range queries {
-		q.Name = k
 
-		if q.Driver == "" {
-			return nil, errors.New("driver is required")
+	for _, data := range parsedQueries {
+		for k, q := range data {
+			q.Name = k
+
+			if q.Driver == "" {
+				return nil, errors.New("driver is required")
+			}
+
+			if q.SQL == "" {
+				return nil, errors.New("SQL statement required")
+			}
+
+			if q.Interval == 0 {
+				q.Interval = DefaultInterval
+			}
+
+			if q.Timeout == 0 {
+				q.Timeout = DefaultTimeout
+			}
+
+			q.DataField = strings.ToLower(q.DataField)
+			queries = append(queries, q)
 		}
-
-		if q.SQL == "" {
-			return nil, errors.New("SQL statement required")
-		}
-
-		if q.Interval == 0 {
-			q.Interval = DefaultInterval
-		}
-
-		if q.Timeout == 0 {
-			q.Timeout = DefaultTimeout
-		}
-
-		q.DataField = strings.ToLower(q.DataField)
 	}
-
 	return queries, nil
 }
 
-func decodeQueriesInDir(path string) (map[string]*Query, error) {
-	queries := make(map[string]*Query)
+func decodeQueriesInDir(path string) (QueryList, error) {
+	queries := make(QueryList, 0)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -92,13 +97,7 @@ func decodeQueriesInDir(path string) (map[string]*Query, error) {
 			if err != nil {
 				return nil, err
 			}
-			for k, v := range q {
-				if queries[k] != nil {
-					return nil, fmt.Errorf("Query %s already defined", k)
-				}
-				queries[k] = v
-			}
-
+			queries = append(queries, q...)
 			file.Close()
 		}
 	}
@@ -135,7 +134,7 @@ func main() {
 
 	var (
 		err     error
-		queries map[string]*Query
+		queries QueryList
 	)
 	if queryDir != "" {
 		queries, err = decodeQueriesInDir(queryDir)

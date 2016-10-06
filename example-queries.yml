@@ -6,7 +6,7 @@
 # to this service.
 
 # Name of the metric. Will be exposed as query_result_num_products
-num_products:
+- num_products:
     # Name of the driver to use.
     driver: postgresql
 
@@ -40,7 +40,7 @@ num_products:
     interval: 1h
 
 # For faceted metrics provide the name of the metric-column in config, and return a resultset of multiple columns and rows
-sales_by_country:
+- sales_by_country:
     # Name of the driver to use.
     driver: postgresql
 
