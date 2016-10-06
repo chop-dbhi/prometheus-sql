@@ -11,15 +11,15 @@ import (
 
 type QueryResult struct {
 	Query  *Query
-	Result map[string]prometheus.Counter // Internally we represent each facet with a JSON-encoded string for simplicity
+	Result map[string]prometheus.Gauge // Internally we represent each facet with a JSON-encoded string for simplicity
 }
 
 // NewSetMetrics initializes a new metrics collector.
 func NewQueryResult(q *Query) *QueryResult {
 	r := &QueryResult{
-		Query: q,
+		Query:  q,
+		Result: make(map[string]prometheus.Gauge),
 	}
-	r.Result = make(map[string]prometheus.Counter)
 
 	return r
 }
@@ -39,7 +39,7 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}) string {
 	}
 
 	fmt.Println("Registering metric", r.Query.Name, "with facets", resultKey)
-	r.Result[resultKey] = prometheus.NewCounter(prometheus.CounterOpts{
+	r.Result[resultKey] = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        fmt.Sprintf("query_result_%s", r.Query.Name),
 		Help:        "Result of an SQL query",
 		ConstLabels: labels,
@@ -51,7 +51,7 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}) string {
 type record map[string]interface{}
 type records []record
 
-func setValueForResult(r prometheus.Counter, v interface{}) error {
+func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	switch t := v.(type) {
 	case string:
 		f, err := strconv.ParseFloat(t, 64)
@@ -87,7 +87,7 @@ func (r *QueryResult) SetMetrics(recs records) error {
 		for k, v := range row {
 			if len(row) > 1 && strings.ToLower(k) != r.Query.DataField { // facet field, add to facets
 				facet[strings.ToLower(fmt.Sprintf("%v", k))] = v
-			} else { // this is the actual counter data
+			} else { // this is the actual gauge data
 				dataVal = v
 				dataFound = true
 			}

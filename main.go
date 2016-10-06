@@ -94,7 +94,7 @@ func decodeQueriesInDir(path string) (map[string]*Query, error) {
 			}
 			for k, v := range q {
 				if queries[k] != nil {
-					return nil,fmt.Errorf("Query %s already defined", k)
+					return nil, fmt.Errorf("Query %s already defined", k)
 				}
 				queries[k] = v
 			}
