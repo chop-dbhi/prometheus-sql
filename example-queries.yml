@@ -5,8 +5,8 @@
 # are passed to the service to execute the query. The other options are specific
 # to this service.
 
-# Name of the endpoint. It will be accessible at /query.
-query:
+# Name of the metric. Will be exposed as query_result_num_products
+num_products:
     # Name of the driver to use.
     driver: postgresql
 
@@ -38,3 +38,26 @@ query:
     # The time between query execution. This should be set relative to the frequency
     # of expected updates and the required granularity of changes.
     interval: 1h
+
+# For faceted metrics provide the name of the metric-column in config, and return a resultset of multiple columns and rows
+sales_by_country:
+    # Name of the driver to use.
+    driver: postgresql
+
+    # Connection information.
+    connection:
+        host: example.org
+        port: 5432
+        user: postgres
+        password: s3cre7
+        database: products
+
+    sql: >
+        select country, count(1) as cnt from sales
+
+    # The time between query execution. This should be set relative to the frequency
+    # of expected updates and the required granularity of changes.
+    interval: 1h
+
+    # The value for our metric is in "cnt", other columns are facets (exposed as labels)
+    data-field: cnt

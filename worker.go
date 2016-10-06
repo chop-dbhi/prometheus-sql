@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -89,14 +88,6 @@ func (w *Worker) Fetch(url string) (records, error) {
 		return nil, err
 	}
 
-	// queries should return only one record
-	if len(recs) > 1 {
-		return nil, errors.New("There is more than one row in the query result")
-	}
-	if len(recs[0]) > 1 {
-		return nil, errors.New("There is more than one column in the query result")
-	}
-
 	return recs, nil
 }
 
@@ -104,9 +95,12 @@ func (w *Worker) Start(cxt context.Context, url string) {
 	recs, err := w.Fetch(url)
 	if err != nil {
 		w.log.Printf("Error fetching records: %s", err)
+	} else {
+		err := w.result.SetMetrics(recs)
+		if err != nil {
+			w.log.Printf("Error setting metrics: %s", err)
+		}
 	}
-
-	w.result.SetMetrics(recs)
 
 	ticker := time.NewTicker(w.query.Interval)
 
@@ -125,7 +119,10 @@ func (w *Worker) Start(cxt context.Context, url string) {
 			}
 
 			// Log metrics.
-			w.result.SetMetrics(recs)
+			err := w.result.SetMetrics(recs)
+			if err != nil {
+				w.log.Printf("Error setting metrics: %s", err)
+			}
 		}
 	}
 }
@@ -146,7 +143,7 @@ func NewWorker(q *Query) *Worker {
 
 	return &Worker{
 		query:   q,
-		result:  NewQueryResult(q.Name),
+		result:  NewQueryResult(q),
 		payload: payload,
 		backoff: defaultBackoff,
 		log:     log.New(os.Stderr, fmt.Sprintf("[%s] ", q.Name), log.LstdFlags),

@@ -8,11 +8,13 @@ This service relies on the [SQL Agent](https://github.com/peakgames/sql-agent) s
 
 ## Behavior
 
-- A static configuration file is used to define the queries to monitor.
+- Static configuration files are used to define the queries to monitor.
 - Each query has a designated worker for execution.
 - An interval is used to define how often to execute the query.
 - Failed queries are automatically retried using a [backoff](https://en.wikipedia.org/wiki/Exponential_backoff) mechanism.
 - Metrics are emitted for each query using a label.
+- Metric names are in the format `query_result_<metric name>`.
+- Faceted metrics are supported.
 
 ## Build
 

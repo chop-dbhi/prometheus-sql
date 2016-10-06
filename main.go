@@ -24,17 +24,16 @@ var (
 	DefaultInterval = time.Minute * 5
 )
 
-// Query defines a SQL statement and parameters as well as configuration
-// for the monitoring behavior and result comparison.
+// Query defines a SQL statement and parameters as well as configuration for the monitoring behavior
 type Query struct {
 	Name       string
-	Path       string
 	Driver     string
 	Connection map[string]interface{}
 	SQL        string
 	Params     map[string]interface{}
 	Interval   time.Duration
 	Timeout    time.Duration
+	DataField  string `yaml:"data-field"`
 }
 
 func decodeQueries(r io.Reader) (map[string]*Query, error) {
@@ -50,14 +49,7 @@ func decodeQueries(r io.Reader) (map[string]*Query, error) {
 		return nil, err
 	}
 	for k, q := range queries {
-		// Set name and path.
-		if len(k) > 0 && k[0] == '/' {
-			q.Name = k[1:]
-			q.Path = k
-		} else {
-			q.Name = k
-			q.Path = "/" + k
-		}
+		q.Name = k
 
 		if q.Driver == "" {
 			return nil, errors.New("driver is required")
@@ -74,6 +66,8 @@ func decodeQueries(r io.Reader) (map[string]*Query, error) {
 		if q.Timeout == 0 {
 			q.Timeout = DefaultTimeout
 		}
+
+		q.DataField = strings.ToLower(q.DataField)
 	}
 
 	return queries, nil
@@ -100,7 +94,7 @@ func decodeQueriesInDir(path string) (map[string]*Query, error) {
 			}
 			for k, v := range q {
 				if queries[k] != nil {
-					return nil, errors.New(fmt.Sprintf("Query %s already defined", k))
+					return nil,fmt.Errorf("Query %s already defined", k)
 				}
 				queries[k] = v
 			}
