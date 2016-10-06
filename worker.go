@@ -3,16 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/jpillora/backoff"
+	"golang.org/x/net/context"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/jpillora/backoff"
-	"golang.org/x/net/context"
 )
 
 // Backoff for fetching. It starts by waiting the minimum duration after a
@@ -32,6 +32,7 @@ type Worker struct {
 	result  *QueryResult
 	log     *log.Logger
 	backoff backoff.Backoff
+	ctx     context.Context
 }
 
 func (w *Worker) Fetch(url string) (records, error) {
@@ -50,6 +51,7 @@ func (w *Worker) Fetch(url string) (records, error) {
 		if err != nil {
 			panic(err)
 		}
+		req = req.WithContext(w.ctx)
 
 		// Set the content-type of the request body and accept LD-JSON.
 		req.Header.Set("content-type", "application/json")
@@ -73,7 +75,12 @@ func (w *Worker) Fetch(url string) (records, error) {
 		w.log.Print(err)
 		d := w.backoff.Duration()
 		w.log.Printf("Backing off for %s", d)
-		time.Sleep(d)
+		select {
+		case <-time.After(d):
+			continue
+		case <-w.ctx.Done():
+			return nil, errors.New("Execution was canceled")
+		}
 	}
 
 	w.backoff.Reset()
@@ -91,7 +98,7 @@ func (w *Worker) Fetch(url string) (records, error) {
 	return recs, nil
 }
 
-func (w *Worker) Start(cxt context.Context, url string) {
+func (w *Worker) Start(url string) {
 	recs, err := w.Fetch(url)
 	if err != nil {
 		w.log.Printf("Error fetching records: %s", err)
@@ -106,8 +113,8 @@ func (w *Worker) Start(cxt context.Context, url string) {
 
 	for {
 		select {
-		case <-cxt.Done():
-			wg, _ := cxt.Value("wg").(*sync.WaitGroup)
+		case <-w.ctx.Done():
+			wg, _ := w.ctx.Value("wg").(*sync.WaitGroup)
 			wg.Done()
 			w.log.Printf("Stopping worker")
 			return
@@ -128,7 +135,7 @@ func (w *Worker) Start(cxt context.Context, url string) {
 }
 
 // NewWorker creates a new worker for a query.
-func NewWorker(q *Query) *Worker {
+func NewWorker(ctx context.Context, q *Query) *Worker {
 	// Encode the payload once for all subsequent requests.
 	payload, err := json.Marshal(map[string]interface{}{
 		"driver":     q.Driver,
@@ -150,5 +157,6 @@ func NewWorker(q *Query) *Worker {
 		client: &http.Client{
 			Timeout: q.Timeout,
 		},
+		ctx: ctx,
 	}
 }

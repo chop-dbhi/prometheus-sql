@@ -163,7 +163,7 @@ func main() {
 	wg.Add(len(queries))
 
 	// Shared context. Close the cxt.Done channel to stop the workers.
-	cxt, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
 	var w *Worker
 
@@ -171,8 +171,8 @@ func main() {
 
 	for _, q := range queries {
 		// Create a new worker and start it in its own goroutine.
-		w = NewWorker(q)
-		go w.Start(context.WithValue(cxt, "wg", wg), service)
+		w = NewWorker(context.WithValue(ctx, "wg", wg), q)
+		go w.Start(service)
 	}
 
 	// Register the handler.
@@ -184,8 +184,8 @@ func main() {
 	// Handles OS kill and interrupt.
 	graceful.Run(addr, 5*time.Second, mux)
 
-	log.Print("canceling workers")
+	log.Print("Canceling workers")
 	cancel()
-	log.Print("waiting for workers to finish")
+	log.Print("Waiting for workers to finish")
 	wg.Wait()
 }
