@@ -9,14 +9,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/context"
 	"gopkg.in/tylerb/graceful.v1"
 	"gopkg.in/yaml.v2"
-	"strings"
 )
 
 var (
@@ -176,7 +176,7 @@ func main() {
 	}
 
 	// Register the handler.
-	mux.Handle("/metrics", prometheus.Handler())
+	mux.Handle("/metrics", promhttp.Handler())
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	log.Printf("* Listening on %s...", addr)
