@@ -99,16 +99,20 @@ func (w *Worker) Fetch(url string) (records, error) {
 }
 
 func (w *Worker) Start(url string) {
-	recs, err := w.Fetch(url)
-	if err != nil {
-		w.log.Printf("Error fetching records: %s", err)
-	} else {
-		err := w.result.SetMetrics(recs)
+	tick := func() {
+		recs, err := w.Fetch(url)
+		if err != nil {
+			w.log.Printf("Error fetching records: %s", err)
+			return
+		}
+
+		err = w.result.SetMetrics(recs)
 		if err != nil {
 			w.log.Printf("Error setting metrics: %s", err)
 		}
 	}
 
+	tick()
 	ticker := time.NewTicker(w.query.Interval)
 
 	for {
@@ -120,16 +124,7 @@ func (w *Worker) Start(url string) {
 			return
 
 		case <-ticker.C:
-			if recs, err = w.Fetch(url); err != nil {
-				w.log.Printf("Error fetching records: %s", err)
-				break
-			}
-
-			// Log metrics.
-			err := w.result.SetMetrics(recs)
-			if err != nil {
-				w.log.Printf("Error setting metrics: %s", err)
-			}
+			tick()
 		}
 	}
 }
