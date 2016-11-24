@@ -69,12 +69,13 @@ func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	return nil
 }
 
-func (r *QueryResult) SetMetrics(recs records) error {
+func (r *QueryResult) SetMetrics(recs records) (map[string]bool, error) {
 	// Queries that return only one record should only have one column
 	if len(recs) > 1 && len(recs[0]) == 1 {
-		return errors.New("There is more than one row in the query result - with a single column")
+		return nil, errors.New("There is more than one row in the query result - with a single column")
 	}
 
+	facetsWithResult := make(map[string]bool, 0)
 	for _, row := range recs {
 		facet := make(map[string]interface{})
 		var (
@@ -82,7 +83,7 @@ func (r *QueryResult) SetMetrics(recs records) error {
 			dataFound bool
 		)
 		if len(row) > 1 && r.Query.DataField == "" {
-			return errors.New("Data field not specified for multi-column query")
+			return nil, errors.New("Data field not specified for multi-column query")
 		}
 		for k, v := range row {
 			if len(row) > 1 && strings.ToLower(k) != r.Query.DataField { // facet field, add to facets
@@ -94,15 +95,27 @@ func (r *QueryResult) SetMetrics(recs records) error {
 		}
 
 		if !dataFound {
-			return errors.New("Data field not found in result set")
+			return nil, errors.New("Data field not found in result set")
 		}
 
 		key := r.registerMetric(facet)
 		err := setValueForResult(r.Result[key], dataVal)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		facetsWithResult[key] = true
 	}
 
-	return nil
+	return facetsWithResult, nil
+}
+
+func (r *QueryResult) RemoveMissingMetrics(facetsWithResult map[string]bool) {
+	for key, m := range r.Result {
+		if _, ok := facetsWithResult[key]; ok {
+			continue
+		}
+		fmt.Println("Unregistering metric", r.Query.Name, "with facets", key)
+		prometheus.Unregister(m)
+		delete(r.Result, key)
+	}
 }

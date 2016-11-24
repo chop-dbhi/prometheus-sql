@@ -106,10 +106,13 @@ func (w *Worker) Start(url string) {
 			return
 		}
 
-		err = w.result.SetMetrics(recs)
+		list, err := w.result.SetMetrics(recs)
 		if err != nil {
 			w.log.Printf("Error setting metrics: %s", err)
+			return
 		}
+
+		w.result.RemoveMissingMetrics(list)
 	}
 
 	tick()
