@@ -25,58 +25,48 @@ This service relies on the [SQL Agent](https://github.com/peakgames/sql-agent) s
 
 ## Build
 
-```
-go build
-```
+### Docker only
 
-### Dependencies
+1. Build Docker image:
+    ```bash
+    docker build -t haxorof/prometheus-sql .
+    ```
 
-Go dependencies are provided in the `vendor` dir. To update or restore dependencies, use [gvt](https://github.com/FiloSottile/gvt).
+### Docker in Vagrant box
 
+1. Start VM with Vagrant:
+    ```bash
+    vagrant up
+    ```
+1. Login as `vagrant` user with password `vagrant`
+1. Build Docker image inside VM:
+    ```bash
+    docker build -t haxorof/prometheus-sql .
+    ```
 
 ## Usage
 
-Create a `queries.yml` file in the current directory that defines the set of named queries to monitor (see the [example file in this repository](./example-queries.yml)).
-
-```
-prometheus-sql
-```
-
-or for an alternate path, use the `-queries` option:
-
-```
-prometheus-sql -queries /path/to/queries.yml
-```
-
-or `-queryDir`, which will load all `*.yml` files in a directory:
-
-```
-prometheus-sql -queryDir /path/to/queries
-```
-
-
-## Docker
+### Docker
 
 Run the SQL agent service.
 
-```
+```bash
 docker run -d --name sqlagent dbhi/sql-agent
 ```
 
-
 Run this service. Mount the queries.yml file and link the SQL Agent service.
 
-```
+```bash
 docker run -d \
     -p 8080:8080 \
     -v /path/to/queries.yml:/queries.yml \
     --link sqlagent:sqlagent \
-    dbhi/prometheus-sql
+    haxorof/prometheus-sql
 ```
 
 To view a plain text version of the metrics, open up the browser to the http://localhost:8080 (or http://192.168.59.103:8080/metrics for boot2docker users).
 
 
-### Compose
+### Docker Compose
 
 Alternately, use the `docker-compose.yml` file included in this repository. The `volumes` section be added for mounting the `queries.yml` file.
