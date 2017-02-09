@@ -28,6 +28,7 @@ This service relies on the [SQL Agent](https://github.com/peakgames/sql-agent) s
 ### Docker only
 
 1. Build Docker image:
+
     ```bash
     docker build -t haxorof/prometheus-sql .
     ```
@@ -35,11 +36,14 @@ This service relies on the [SQL Agent](https://github.com/peakgames/sql-agent) s
 ### Docker in Vagrant box
 
 1. Start VM with Vagrant:
+
     ```bash
     vagrant up
     ```
+
 1. Login as `vagrant` user with password `vagrant`
 1. Build Docker image inside VM:
+
     ```bash
     docker build -t haxorof/prometheus-sql .
     ```
