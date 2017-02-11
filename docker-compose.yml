@@ -3,7 +3,7 @@ sqlagent:
 
 
 prometheussql:
-    image: haxorof/prometheus-sql
+    image: dbhi/prometheus-sql
 
     links:
         - sqlagent:sqlagent
