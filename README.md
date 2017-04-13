@@ -1,10 +1,10 @@
 # Prometheus SQL
 
-[![GoDoc](https://godoc.org/github.com/peakgames/prometheus-sql?status.svg)](https://godoc.org/github.com/peakgames/prometheus-sql)
+[![GoDoc](https://godoc.org/github.com/chop-dbhi/prometheus-sql?status.svg)](https://godoc.org/github.com/chop-dbhi/prometheus-sql)
 
 Service that generates basic metrics for SQL result sets and exposing them as Prometheus metrics.
 
-This service relies on the [SQL Agent](https://github.com/peakgames/sql-agent) service to execute and return the SQL result sets.
+This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) service to execute and return the SQL result sets.
 
 ## Behavior
 
