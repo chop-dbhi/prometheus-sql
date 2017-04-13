@@ -1,2 +1,4 @@
 *.sw?
 prometheus-sql
+.idea
+.vagrant

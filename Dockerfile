@@ -1,4 +1,4 @@
-FROM golang:1.4-onbuild
+FROM golang:1.7-onbuild
 
 WORKDIR /
 

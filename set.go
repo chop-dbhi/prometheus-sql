@@ -1,148 +1,121 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
-
 	"github.com/prometheus/client_golang/prometheus"
+	"strconv"
+	"strings"
 )
 
-// SetMetrics is an interface for tracking metrics for a given set.
-type SetMetrics struct {
-	Name string
-
-	Size      prometheus.Gauge
-	Additions prometheus.Gauge
-	Removals  prometheus.Gauge
-	Changes   prometheus.Gauge
-}
-
-// Compares the two states and writes the metric values. The first set value
-// denotes the previous state. For the first evaluation this should be nil.
-// The new state (b) should always be non-nil.
-func (m *SetMetrics) Compare(a, b *Set) {
-	var adds, chgs, rms int
-
-	// Compare against previous state.
-	if a != nil {
-		var (
-			ok     bool
-			ak, bk string
-			av, bv interface{}
-		)
-
-		for ak, av = range a.index {
-			if bv, ok = b.index[ak]; !ok {
-				rms++
-				continue
-			}
-
-			if !reflect.DeepEqual(av, bv) {
-				chgs++
-			}
-		}
-
-		for bk, _ = range b.index {
-			if _, ok = a.index[bk]; !ok {
-				adds++
-			}
-		}
-	}
-
-	m.Size.Set(float64(b.Size()))
-	m.Additions.Set(float64(adds))
-	m.Removals.Set(float64(rms))
-	m.Changes.Set(float64(chgs))
+type QueryResult struct {
+	Query  *Query
+	Result map[string]prometheus.Gauge // Internally we represent each facet with a JSON-encoded string for simplicity
 }
 
 // NewSetMetrics initializes a new metrics collector.
-func NewSetMetrics(name string) *SetMetrics {
-	labels := prometheus.Labels{
-		"query": name,
+func NewQueryResult(q *Query) *QueryResult {
+	r := &QueryResult{
+		Query:  q,
+		Result: make(map[string]prometheus.Gauge),
 	}
 
-	m := &SetMetrics{
-		Name: name,
+	return r
+}
 
-		Size: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name:        "set_size",
-			Help:        "Size of the set.",
-			ConstLabels: labels,
-		}),
+func (r *QueryResult) registerMetric(facets map[string]interface{}) string {
+	labels := prometheus.Labels{}
 
-		Additions: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name:        "set_additions",
-			Help:        "Number of additions to the set.",
-			ConstLabels: labels,
-		}),
+	jsonData, _ := json.Marshal(facets)
+	resultKey := string(jsonData)
 
-		Removals: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name:        "set_removals",
-			Help:        "Number of removals from the set.",
-			ConstLabels: labels,
-		}),
-
-		Changes: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name:        "set_changes",
-			Help:        "Number of item that changed in the set.",
-			ConstLabels: labels,
-		}),
+	for k, v := range facets {
+		labels[k] = strings.ToLower(fmt.Sprintf("%v", v))
 	}
 
-	prometheus.MustRegister(m.Size)
-	prometheus.MustRegister(m.Additions)
-	prometheus.MustRegister(m.Removals)
-	prometheus.MustRegister(m.Changes)
+	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
+		return resultKey
+	}
 
-	return m
+	fmt.Println("Registering metric", r.Query.Name, "with facets", resultKey)
+	r.Result[resultKey] = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name:        fmt.Sprintf("query_result_%s", r.Query.Name),
+		Help:        "Result of an SQL query",
+		ConstLabels: labels,
+	})
+	prometheus.MustRegister(r.Result[resultKey])
+	return resultKey
 }
 
 type record map[string]interface{}
+type records []record
 
-type Set struct {
-	key     string
-	records []record
-	index   map[string]record
+func setValueForResult(r prometheus.Gauge, v interface{}) error {
+	switch t := v.(type) {
+	case string:
+		f, err := strconv.ParseFloat(t, 64)
+		if err != nil {
+			return err
+		}
+		r.Set(f)
+	case int:
+		r.Set(float64(t))
+	case float64:
+		r.Set(t)
+	default:
+		return fmt.Errorf("Unhandled type %s", t)
+	}
+	return nil
 }
 
-var (
-	ErrDuplicateItem     = errors.New("duplicate item found for set")
-	ErrInvalidIdentifier = errors.New("identifier is not a colum")
-)
-
-func NewSet(key string, records []record) (*Set, error) {
-	s := &Set{
-		key:     key,
-		records: records,
+func (r *QueryResult) SetMetrics(recs records) (map[string]bool, error) {
+	// Queries that return only one record should only have one column
+	if len(recs) > 1 && len(recs[0]) == 1 {
+		return nil, errors.New("There is more than one row in the query result - with a single column")
 	}
 
-	s.index = make(map[string]record, len(records))
-
-	var (
-		idv interface{}
-		id  string
-	)
-
-	for _, r := range records {
-		idv = r[key]
-
-		if idv == nil {
-			return nil, ErrInvalidIdentifier
+	facetsWithResult := make(map[string]bool, 0)
+	for _, row := range recs {
+		facet := make(map[string]interface{})
+		var (
+			dataVal   interface{}
+			dataFound bool
+		)
+		if len(row) > 1 && r.Query.DataField == "" {
+			return nil, errors.New("Data field not specified for multi-column query")
+		}
+		for k, v := range row {
+			if len(row) > 1 && strings.ToLower(k) != r.Query.DataField { // facet field, add to facets
+				facet[strings.ToLower(fmt.Sprintf("%v", k))] = v
+			} else { // this is the actual gauge data
+				dataVal = v
+				dataFound = true
+			}
 		}
 
-		id = fmt.Sprint(idv)
-
-		if _, ok := s.index[id]; ok {
-			return nil, ErrDuplicateItem
+		if !dataFound {
+			return nil, errors.New("Data field not found in result set")
 		}
 
-		s.index[id] = r
+		key := r.registerMetric(facet)
+		err := setValueForResult(r.Result[key], dataVal)
+		if err != nil {
+			return nil, err
+		}
+		facetsWithResult[key] = true
 	}
 
-	return s, nil
+	return facetsWithResult, nil
 }
 
-func (s *Set) Size() int {
-	return len(s.records)
+func (r *QueryResult) RemoveMissingMetrics(facetsWithResult map[string]bool) {
+	for key, m := range r.Result {
+		if _, ok := facetsWithResult[key]; ok {
+			continue
+		}
+		fmt.Println("Unregistering metric", r.Query.Name, "with facets", key)
+		prometheus.Unregister(m)
+		delete(r.Result, key)
+	}
 }

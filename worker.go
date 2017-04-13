@@ -3,16 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/jpillora/backoff"
+	"golang.org/x/net/context"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/jpillora/backoff"
-	"golang.org/x/net/context"
 )
 
 // Backoff for fetching. It starts by waiting the minimum duration after a
@@ -27,15 +27,15 @@ var defaultBackoff = backoff.Backoff{
 
 type Worker struct {
 	query   *Query
-	state   *Set
 	payload []byte
 	client  *http.Client
-	metrics *SetMetrics
+	result  *QueryResult
 	log     *log.Logger
 	backoff backoff.Backoff
+	ctx     context.Context
 }
 
-func (w *Worker) Fetch(url string) (*Set, error) {
+func (w *Worker) Fetch(url string) (records, error) {
 	var (
 		t    time.Time
 		err  error
@@ -51,6 +51,7 @@ func (w *Worker) Fetch(url string) (*Set, error) {
 		if err != nil {
 			panic(err)
 		}
+		req = req.WithContext(w.ctx)
 
 		// Set the content-type of the request body and accept LD-JSON.
 		req.Header.Set("content-type", "application/json")
@@ -74,81 +75,65 @@ func (w *Worker) Fetch(url string) (*Set, error) {
 		w.log.Print(err)
 		d := w.backoff.Duration()
 		w.log.Printf("Backing off for %s", d)
-		time.Sleep(d)
+		select {
+		case <-time.After(d):
+			continue
+		case <-w.ctx.Done():
+			return nil, errors.New("Execution was canceled")
+		}
 	}
 
 	w.backoff.Reset()
 
 	w.log.Printf("Fetch took %s", time.Now().Sub(t))
 
-	var records []record
+	var recs []record
 
 	defer resp.Body.Close()
 
-	if err = json.NewDecoder(resp.Body).Decode(&records); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&recs); err != nil {
 		return nil, err
 	}
 
-	return NewSet(w.query.Identifier, records)
+	return recs, nil
 }
 
-func (w *Worker) Start(cxt context.Context, url string) {
-	state, err := w.Fetch(url)
+func (w *Worker) Start(url string) {
+	tick := func() {
+		recs, err := w.Fetch(url)
+		if err != nil {
+			w.log.Printf("Error fetching records: %s", err)
+			return
+		}
 
-	if err != nil {
-		w.log.Printf("Error fetching state: %s", err)
+		list, err := w.result.SetMetrics(recs)
+		if err != nil {
+			w.log.Printf("Error setting metrics: %s", err)
+			return
+		}
+
+		w.result.RemoveMissingMetrics(list)
 	}
 
-	// Set the initial state.
-	w.state = state
-
-	if state != nil {
-		w.metrics.Compare(nil, state)
-	}
-
+	tick()
 	ticker := time.NewTicker(w.query.Interval)
 
 	for {
 		select {
-		case <-cxt.Done():
-			wg, _ := cxt.Value("wg").(*sync.WaitGroup)
+		case <-w.ctx.Done():
+			wg, _ := w.ctx.Value("wg").(*sync.WaitGroup)
 			wg.Done()
 			w.log.Printf("Stopping worker")
 			return
 
 		case <-ticker.C:
-			if state, err = w.Fetch(url); err != nil {
-				w.log.Printf("Error fetching state: %s", err)
-				break
-			}
-
-			// Compare with new state and log metrics.
-			w.metrics.Compare(w.state, state)
-			w.state = state
+			tick()
 		}
-	}
-}
-
-// StateHandler returns an http.HandlerFunc that writes the state of the query.
-func (w *Worker) StateHandler() http.HandlerFunc {
-	return func(rp http.ResponseWriter, _ *http.Request) {
-		if w.state == nil {
-			rp.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		if err := json.NewEncoder(rp).Encode(w.state.records); err != nil {
-			rp.WriteHeader(http.StatusInternalServerError)
-			rp.Write([]byte(err.Error()))
-			return
-		}
-
-		rp.Header().Set("content-type", "application/json")
 	}
 }
 
 // NewWorker creates a new worker for a query.
-func NewWorker(q *Query) *Worker {
+func NewWorker(ctx context.Context, q *Query) *Worker {
 	// Encode the payload once for all subsequent requests.
 	payload, err := json.Marshal(map[string]interface{}{
 		"driver":     q.Driver,
@@ -163,12 +148,13 @@ func NewWorker(q *Query) *Worker {
 
 	return &Worker{
 		query:   q,
-		metrics: NewSetMetrics(q.Name),
+		result:  NewQueryResult(q),
 		payload: payload,
 		backoff: defaultBackoff,
 		log:     log.New(os.Stderr, fmt.Sprintf("[%s] ", q.Name), log.LstdFlags),
 		client: &http.Client{
 			Timeout: q.Timeout,
 		},
+		ctx: ctx,
 	}
 }
