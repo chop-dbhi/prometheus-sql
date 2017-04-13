@@ -1,0 +1,19 @@
+{
+    "dependencies": {
+        "github.com/jpillora/backoff": {
+            "branch": "master"
+        },
+        "github.com/prometheus/client_golang": {
+            "branch": "master"
+        },
+        "golang.org/x/net": {
+            "branch": "master"
+        },
+        "gopkg.in/tylerb/graceful.v1": {
+            "branch": "master"
+        },
+        "gopkg.in/yaml.v2": {
+            "branch": "master"
+        }
+    }
+}

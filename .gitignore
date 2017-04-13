@@ -2,3 +2,5 @@
 prometheus-sql
 .idea
 .vagrant
+vendor
+dist
