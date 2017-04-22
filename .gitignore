@@ -4,3 +4,4 @@ prometheus-sql
 .vagrant
 vendor
 dist
+gox

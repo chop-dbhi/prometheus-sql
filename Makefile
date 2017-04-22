@@ -46,4 +46,12 @@ docker-push:
 		docker push ${IMAGE_NAME}:latest ; \
 	fi;
 
-.PHONY: build dist-build dist
+prepareDeps:
+	go get -d
+
+gox:
+	go get github.com/mitchellh/gox
+
+prepare: gox prepareDeps
+
+.PHONY: prepare prepareDeps build dist-build dist
