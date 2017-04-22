@@ -25,29 +25,41 @@ This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) s
 
 ## Build
 
-### Build directly via console
+### Build distribution binaries
 
-1. Get project dependencies:
+This section describes how you build prometheus-sql distribution binaries.
 
+1. Build prometheus-sql binaries for several platforms:
+
+    Using Docker:
     ```bash
-    go get -d
+    docker run --rm -v ${PWD}:/go/bin -v ${PWD}:/usr/src/myapp -w /usr/src/myapp golang:1.8 bash -c 'make prepare dist-build'
     ```
 
-1. Build via console:
-
+    Using Make:
     ```bash
-    go build
+    make prepare dist-build
     ```
 
-### Build with Docker
+1. All binaries produced are now located in directories under the `dist` directory.
+
+### Build prometheus-sql Docker image
+
+1. Build distribution binaries as described in previous section.
 
 1. Build Docker image:
 
+    Using Make:
+    ```bash
+    make docker
+    ```
+
+    Using Docker directly (for test only):
     ```bash
     docker build -t dbhi/prometheus-sql .
     ```
 
-### Build with Docker insida a Vagrant box
+### Build with Docker inside a Vagrant box
 
 1. Start VM with Vagrant:
 
@@ -56,11 +68,8 @@ This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) s
     ```
 
 1. Login as `vagrant` user with password `vagrant`
-1. Build Docker image inside VM:
 
-    ```bash
-    docker build -t dbhi/prometheus-sql .
-    ```
+1. See above sections how to build binaries etc.
 
 ## Usage
 

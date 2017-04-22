@@ -1,6 +1,8 @@
 .git/
+.vagrant/
 README.md
 LICENSE
 example-queries.yml
 Vagrantfile
 docker-compose.yml
+gox
