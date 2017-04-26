@@ -88,20 +88,20 @@ Alternately, use the `docker-compose.yml` file included in this repository. The 
 
 ## How To Build
 
-### Build distribution binaries
+### Build distribution packages
 
-This section describes how you build prometheus-sql distribution binaries.
+This section describes how you build prometheus-sql distribution packages.
 
-1. Build prometheus-sql binaries for several platforms:
+1. Build prometheus-sql packages for several platforms:
 
     Using Make:
     ```bash
-    make prepare dist-build
+    make prepare dist
     ```
 
     Using Docker:
     ```bash
-    docker run --rm -v ${PWD}:/go/bin -v ${PWD}:/usr/src/myapp -w /usr/src/myapp golang:1.8 bash -c 'make prepare dist-build'
+    docker run --rm -v ${PWD}:/go/bin -v ${PWD}:/usr/src/myapp -w /usr/src/myapp golang:1.8 bash -c 'apt-get update && apt-get -y install zip && make prepare dist'
     ```
 
 1. All binaries produced are now located in directories under the `dist` directory.
