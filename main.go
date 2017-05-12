@@ -34,6 +34,7 @@ type Query struct {
 	Interval   time.Duration
 	Timeout    time.Duration
 	DataField  string `yaml:"data-field"`
+    ErrorValue string `yaml:"error-value"`
 }
 type QueryList []*Query
 
