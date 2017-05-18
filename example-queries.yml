@@ -39,6 +39,10 @@
     # of expected updates and the required granularity of changes.
     interval: 1h
 
+    # error value, default is null
+    # if not null, when query has error, will use this value to indicate an error has occured
+    #error-value: '-1'
+
 # For faceted metrics provide the name of the metric-column in config, and return a resultset of multiple columns and rows
 - sales_by_country:
     # Name of the driver to use.
