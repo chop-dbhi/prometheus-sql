@@ -36,14 +36,13 @@ type Worker struct {
 }
 
 func (w *Worker) SetMetrics(recs records) {
+	list, err := w.result.SetMetrics(recs)
+	if err != nil {
+		w.log.Printf("Error setting metrics: %s", err)
+		return
+	}
 
-		list, err := w.result.SetMetrics(recs)
-		if err != nil {
-			w.log.Printf("Error setting metrics: %s", err)
-			return
-		}
-
-		w.result.RemoveMissingMetrics(list)
+	w.result.RemoveMissingMetrics(list)
 }
 
 func (w *Worker) Fetch(url string) (records, error) {
@@ -81,14 +80,14 @@ func (w *Worker) Fetch(url string) (records, error) {
 		if err == nil {
 			break
 		}
-        
-        if w.query.ErrorValue != "" {
-            rec := make(map[string]interface{})
-            rec["error"] = w.query.ErrorValue
-            var recs []record
-            recs = append(recs, rec)
-            w.SetMetrics(recs)
-        }
+
+		if w.query.ValueOnError != "" {
+			w.SetMetrics([]record{
+				map[string]interface{}{
+					"error": w.query.ValueOnError,
+				},
+			})
+		}
 
 		// Backoff on an error.
 		w.log.Print(err)
@@ -113,10 +112,10 @@ func (w *Worker) Fetch(url string) (records, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&recs); err != nil {
 		return nil, err
 	}
-    
-    w.SetMetrics(recs)
-	
-    return recs, nil
+
+	w.SetMetrics(recs)
+
+	return recs, nil
 }
 
 func (w *Worker) Start(url string) {

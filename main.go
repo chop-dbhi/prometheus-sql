@@ -26,15 +26,15 @@ var (
 
 // Query defines a SQL statement and parameters as well as configuration for the monitoring behavior
 type Query struct {
-	Name       string
-	Driver     string
-	Connection map[string]interface{}
-	SQL        string
-	Params     map[string]interface{}
-	Interval   time.Duration
-	Timeout    time.Duration
-	DataField  string `yaml:"data-field"`
-    ErrorValue string `yaml:"error-value"`
+	Name         string
+	Driver       string
+	Connection   map[string]interface{}
+	SQL          string
+	Params       map[string]interface{}
+	Interval     time.Duration
+	Timeout      time.Duration
+	DataField    string `yaml:"data-field"`
+	ValueOnError string `yaml:"value-on-error"`
 }
 type QueryList []*Query
 
