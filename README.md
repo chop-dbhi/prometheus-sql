@@ -1,6 +1,6 @@
 # Prometheus SQL
 
-[![Docker Build Statu](https://img.shields.io/docker/build/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/builds/)
+[![Docker Build Status](https://img.shields.io/docker/build/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/builds/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/)
 [![GoDoc](https://godoc.org/github.com/chop-dbhi/prometheus-sql?status.svg)](https://godoc.org/github.com/chop-dbhi/prometheus-sql)
 
@@ -89,4 +89,4 @@ Alternately, use the `docker-compose.yml` file included in this repository. The 
 
 ## Contributing
 
-Read instructions [how to contribute before](CONTRIBUTING.md) you start.
+Read instructions [how to contribute](CONTRIBUTING.md) before you start.
