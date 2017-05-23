@@ -1,11 +1,8 @@
 # Contributing to prometheus-sql
 
-**First:** if you're unsure or afraid of _anything_, just ask or submit the issue or pull request anyways. You won't be yelled at for
-giving your best effort. The worst that can happen is that you'll be politely asked to change something. We appreciate any sort of contributions,
-and don't want a wall of rules to get in the way of that.
+**First:** if you're unsure or afraid of _anything_, just ask or submit the issue or pull request anyways. You won't be yelled at for giving your best effort. The worst that can happen is that you'll be politely asked to change something. We appreciate any sort of contributions, and don't want a wall of rules to get in the way of that.
 
-However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover
-what we're looking for. By addressing all the points we're looking for, it raises the chances we can quickly merge or address your contributions.
+However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover what we're looking for. By addressing all the points we're looking for, it raises the chances we can quickly merge or address your contributions.
 
 ## Issues
 
@@ -48,13 +45,13 @@ This section describes how you build prometheus-sql distribution packages.
     docker run --rm -v ${PWD}:/go/bin -v ${PWD}:/usr/src/myapp -w /usr/src/myapp golang:1.8 bash -c 'apt-get update && apt-get -y install zip && make prepare dist'
     ```
 
-1. All binaries produced are now located in directories under the `dist` directory.
+2. All binaries produced are now located in directories under the `dist` directory.
 
 ### Build prometheus-sql Docker image
 
 1. Build distribution binaries as described in previous section.
 
-1. Build Docker image:
+2. Build Docker image:
 
     Using Make:
     ```bash
@@ -74,13 +71,6 @@ This section describes how you build prometheus-sql distribution packages.
     vagrant up
     ```
 
-1. Login as `vagrant` user with password `vagrant`
+2. Login as `vagrant` user with password `vagrant`
 
-1. See above sections how to build binaries etc.
-
-
-
-
-
-
-
+3. See above sections how to build binaries etc.
