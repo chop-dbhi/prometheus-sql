@@ -1,6 +1,6 @@
 # Prometheus SQL
 
-[![Docker Build Statu](https://img.shields.io/docker/build/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/)
+[![Docker Build Status](https://img.shields.io/docker/build/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/builds/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/)
 [![GoDoc](https://godoc.org/github.com/chop-dbhi/prometheus-sql?status.svg)](https://godoc.org/github.com/chop-dbhi/prometheus-sql)
 
@@ -86,51 +86,7 @@ To view a plain text version of the metrics, open up the browser to the <http://
 
 Alternately, use the `docker-compose.yml` file included in this repository. The `volumes` section be added for mounting the `queries.yml` file.
 
-## How To Build
 
-### Build distribution packages
+## Contributing
 
-This section describes how you build prometheus-sql distribution packages.
-
-1. Build prometheus-sql packages for several platforms:
-
-    Using Make:
-    ```bash
-    make prepare dist
-    ```
-
-    Using Docker:
-    ```bash
-    docker run --rm -v ${PWD}:/go/bin -v ${PWD}:/usr/src/myapp -w /usr/src/myapp golang:1.8 bash -c 'apt-get update && apt-get -y install zip && make prepare dist'
-    ```
-
-1. All binaries produced are now located in directories under the `dist` directory.
-
-### Build prometheus-sql Docker image
-
-1. Build distribution binaries as described in previous section.
-
-1. Build Docker image:
-
-    Using Make:
-    ```bash
-    make docker
-    ```
-
-    Using Docker directly (for test only):
-    ```bash
-    docker build -t dbhi/prometheus-sql .
-    ```
-
-### Build inside a Vagrant box
-
-1. Start VM with Vagrant:
-
-    ```bash
-    vagrant up
-    ```
-
-1. Login as `vagrant` user with password `vagrant`
-
-1. See above sections how to build binaries etc.
-
+Read instructions [how to contribute](CONTRIBUTING.md) before you start.
