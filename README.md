@@ -85,3 +85,8 @@ To view a plain text version of the metrics, open up the browser to the <http://
 ### Run using a Docker Compose file
 
 Alternately, use the `docker-compose.yml` file included in this repository. The `volumes` section be added for mounting the `queries.yml` file.
+
+
+## Contributing
+
+Read instructions [how to contribute before](CONTRIBUTING.md) you start.
