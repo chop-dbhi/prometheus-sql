@@ -1,6 +1,6 @@
 FROM frolvlad/alpine-glibc:alpine-3.5
 
-ARG PROMETHEUS_SQL_VERSION=1.0.0
+ARG PROMETHEUS_SQL_VERSION=1.1.0
 ARG BASE_URL=https://github.com/chop-dbhi/prometheus-sql/releases/download/$PROMETHEUS_SQL_VERSION
 ARG OS_ARCH=linux-amd64
 ARG ZIP_FILE=prometheus-sql-${OS_ARCH}.zip
