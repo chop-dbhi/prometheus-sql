@@ -47,30 +47,22 @@ This section describes how you build prometheus-sql distribution packages.
 
 2. All binaries produced are now located in directories under the `dist` directory.
 
-### Build prometheus-sql Docker image
+### Build prometheus-sql Docker image locally
 
 1. Build distribution binaries as described in previous section.
 
-2. Build Docker image:
+2. Go into `dist` directory.
 
-    Using Make:
+3. Start Simple HTTP server as a background process: `python -m SimpleHTTPServer &`
+
+4. Go back to the project root directory.
+
+5. Build Docker image:
+
+    Using Docker (for test only):
     ```bash
-    make docker
+    docker build --tag dbhi/prometheus-sql --rm --build-arg BASE_URL=http://localhost:8000 --no-cache .
     ```
 
-    Using Docker directly (for test only):
-    ```bash
-    docker build -t dbhi/prometheus-sql .
-    ```
+6. Done! Docker image is now built and you can kill the Simple HTTP server process.
 
-### Build inside a Vagrant box
-
-1. Start VM with Vagrant:
-
-    ```bash
-    vagrant up
-    ```
-
-2. Login as `vagrant` user with password `vagrant`
-
-3. See above sections how to build binaries etc.
