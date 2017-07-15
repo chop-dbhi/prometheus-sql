@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jpillora/backoff"
-	"golang.org/x/net/context"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/jpillora/backoff"
+	"golang.org/x/net/context"
 )
 
 // Backoff for fetching. It starts by waiting the minimum duration after a

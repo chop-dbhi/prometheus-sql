@@ -28,8 +28,10 @@ This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) s
 
 ## Usage
 
-```bash
+```shell
 Usage of prometheus-sql:
+  -config string
+        Configuration file to define common data sources etc. (default "prometheus-sql.yml")
   -host string
         Host of the service.
   -port int
@@ -52,14 +54,14 @@ In the repository there is an [example file](example-queries.yml) that you can h
 
 Create a `queries.yml` file in the current directory and run the following:
 
-```bash
+```shell
 prometheus-sql
 ```
 
 or for an alternate path, use the -queries or the -queryDir option:
 
-```bash
-prometheus-sql -queries /path/to/queries.yml
+```shell
+prometheus-sql -queries ${PWD}/queries.yml
 ```
 
 ### Run using Docker
@@ -72,22 +74,34 @@ docker run -d --name sqlagent dbhi/sql-agent
 
 Run this service. Mount the `queries.yml` file and link the SQL Agent service.
 
-```bash
+```shell
 docker run -d \
-    --name prometheus-sql \
-    -p 8080:8080 \
-    -v /path/to/queries.yml:/queries.yml \
-    --link sqlagent:sqlagent \
-    dbhi/prometheus-sql
+  --name prometheus-sql \
+  -p 8080:8080 \
+  -v ${PWD}/queries.yml:/queries.yml \
+  --link sqlagent:sqlagent \
+  dbhi/prometheus-sql
+```
+
+If you want to separate database connection information etc you can do that by specifying data sources in separate file which you then can mount:
+
+```shell
+docker run -d \
+  --name prometheus-sql \
+  -p 8080:8080 \
+  -v ${PWD}/queries.yml:/queries.yml \
+  -v ${PWD}/prometheus-sql.yml:/prometheus-sql.yml \
+  --link sqlagent:sqlagent \
+  dbhi/prometheus-sql \
+  -service http://sqlagent:5000 \
+  -config prometheus-sql.yml
 ```
 
 To view a plain text version of the metrics, open up the browser to the <http://localhost:8080/metrics> (or <http://192.168.59.103:8080/metrics> for boot2docker users).
 
-
 ### Run using a Docker Compose file
 
 Alternately, use the `docker-compose.yml` file included in this repository. The `volumes` section be added for mounting the `queries.yml` file.
-
 
 ## Contributing
 

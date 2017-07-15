@@ -6,3 +6,6 @@ example-queries.yml
 Vagrantfile
 docker-compose.yml
 gox
+debug
+debug.test
+test-resources/

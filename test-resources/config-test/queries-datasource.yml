@@ -1,0 +1,15 @@
+# PASS: Data source reference is defined (test uses queries-config.yml with this test)
+
+# Data source my-ds-1 will be used, interval and timeout overrides defaults
+- query_ds_1:
+    sql: >
+      select 1 from dual
+    interval: 10s
+    timeout: 5s
+    value-on-error: 0
+
+# Override default data source only
+- query_ds_2:
+    data-source: my-ds-2
+    sql: >
+      select 1 from dual

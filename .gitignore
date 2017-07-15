@@ -1,7 +1,12 @@
 *.sw?
 prometheus-sql
+prometheus-sql.exe
 .idea
 .vagrant
 vendor
 dist
 gox
+.vscode
+debug
+debug.test
+

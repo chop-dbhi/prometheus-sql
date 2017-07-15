@@ -1,0 +1,10 @@
+# FAIL: Properties must be specified
+data-sources:
+  mysql-test:
+    driver: mysql
+    connection:
+      host: localhost
+      port: 3306
+      user: root
+      password: unsecure
+      database: test

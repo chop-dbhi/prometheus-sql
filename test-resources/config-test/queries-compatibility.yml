@@ -1,0 +1,11 @@
+# PASS: Only way to defined a data source in version 1.1 and earlier
+- num_products:
+    driver: postgresql
+    connection:
+      host: example.org
+      port: 5432
+      user: postgres
+      password: s3cre7
+      database: products
+    sql: >
+        select 1 from dual
