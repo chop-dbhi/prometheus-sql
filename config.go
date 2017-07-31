@@ -10,18 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/locales/en"
-
-	ut "github.com/go-playground/universal-translator"
-	validator "gopkg.in/go-playground/validator.v9"
-	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
 	yaml "gopkg.in/yaml.v2"
-)
-
-var (
-	// use a single instance of Validate, it caches struct info
-	validate *validator.Validate
-	trans    ut.Translator
 )
 
 // Default config values
@@ -38,36 +27,36 @@ var (
 
 // Config is the base data structure.
 type Config struct {
-	Defaults    DefaultsData          `yaml:"defaults" validate:"dive"`
-	DataSources map[string]DataSource `yaml:"data-sources" validate:"dive"`
+	Defaults    DefaultsData          `yaml:"defaults"`
+	DataSources map[string]DataSource `yaml:"data-sources"`
 }
 
 // DefaultsData defines the possible default values to define.
 type DefaultsData struct {
 	DataSourceRef     string        `yaml:"data-source"`
-	QueryInterval     time.Duration `yaml:"query-interval" validate:"gt=0"`
-	QueryTimeout      time.Duration `yaml:"query-timeout" validate:"gt=0"`
+	QueryInterval     time.Duration `yaml:"query-interval"`
+	QueryTimeout      time.Duration `yaml:"query-timeout"`
 	QueryValueOnError string        `yaml:"query-value-on-error"`
 }
 
 // DataSource is configuration a data source which must be supported by sql-agent.
 type DataSource struct {
-	Driver     string                 `yaml:"driver" validate:"required"`
-	Properties map[string]interface{} `yaml:"properties" validate:"required"`
+	Driver     string                 `yaml:"driver"`
+	Properties map[string]interface{} `yaml:"properties"`
 }
 
 // Query defines a SQL statement and parameters as well as configuration for the monitoring behavior
 type Query struct {
-	Name          string                 `validate:"required"`
-	DataSourceRef string                 `yaml:"data-source"`
-	Driver        string                 `validate:"required"`
-	Connection    map[string]interface{} `validate:"required"`
-	SQL           string                 `validate:"required"`
+	Name          string
+	DataSourceRef string `yaml:"data-source"`
+	Driver        string
+	Connection    map[string]interface{}
+	SQL           string
 	Params        map[string]interface{}
-	Interval      time.Duration `validate:"gt=0"` // default 5m
-	Timeout       time.Duration `validate:"gt=0"` // default 1m
-	DataField     string        `yaml:"data-field"`
-	ValueOnError  string        `yaml:"value-on-error"`
+	Interval      time.Duration
+	Timeout       time.Duration
+	DataField     string `yaml:"data-field"`
+	ValueOnError  string `yaml:"value-on-error"`
 }
 
 // QueryList is a array or Queries
@@ -96,24 +85,33 @@ func appendDefaults(c Config) Config {
 	return c
 }
 
-func getValidator() *validator.Validate {
-	if validate == nil {
-		en := en.New()
-		uni := ut.New(en, en)
-		trans, _ := uni.GetTranslator("en")
-		validate = validator.New()
-		en_translations.RegisterDefaultTranslations(validate, trans)
+func validateConfig(c *Config) error {
+	for name, ds := range c.DataSources {
+		if ds.Driver == "" {
+			return fmt.Errorf("Driver is not defined for data source [%s]", name)
+		}
+		if len(ds.Properties) == 0 {
+			return fmt.Errorf("Properties are not defined for data source [%s]", name)
+		}
 	}
-	return validate
+	return nil
 }
 
-func validateStruct(c interface{}) error {
-	if err := getValidator().Struct(c); err != nil {
-		errs := err.(validator.ValidationErrors)
-		for _, e := range errs {
-			// We just take the first error
-			return fmt.Errorf("Validation error: %s", e.Translate(trans))
-		}
+func validateQuery(q *Query) error {
+	if q.Name == "" {
+		return errors.New("Query is not named")
+	}
+	if q.Driver == "" {
+		return fmt.Errorf("No data source or driver is specified for query [%s]", q.Name)
+	}
+	if q.SQL == "" {
+		return fmt.Errorf("SQL statement required for query [%s]", q.Name)
+	}
+	if q.Timeout == 0 {
+		return fmt.Errorf("Timeout must be greater than zero for query [%s]", q.Name)
+	}
+	if q.Interval == 0 {
+		return fmt.Errorf("Interval must be greater than zero for query [%s]", q.Name)
 	}
 	return nil
 }
@@ -129,7 +127,7 @@ func loadConfig(file string) (*Config, error) {
 		return nil, fmt.Errorf("Error decoding config file: %s", err)
 	}
 	c = appendDefaults(c)
-	if err := validateStruct(c); err != nil {
+	if err := validateConfig(&c); err != nil {
 		return nil, err
 	}
 	return &c, err
@@ -188,12 +186,6 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 					q.Driver = ds.Driver
 					q.Connection = ds.Properties
 				}
-				if q.Driver == "" {
-					return nil, fmt.Errorf("No data source or driver is specified for query [%s]", q.Name)
-				}
-			}
-			if q.SQL == "" {
-				return nil, errors.New("SQL statement required")
 			}
 			q.Interval = useFallbackIfZero(q.Interval, config.Defaults.QueryInterval)
 			q.Timeout = useFallbackIfZero(q.Timeout, config.Defaults.QueryTimeout)
@@ -201,7 +193,7 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 				q.ValueOnError = config.Defaults.QueryValueOnError
 			}
 			q.DataField = strings.ToLower(q.DataField)
-			if err := validateStruct(q); err != nil {
+			if err := validateQuery(q); err != nil {
 				return nil, err
 			}
 
