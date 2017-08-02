@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	//"github.com/davecgh/go-spew/spew"
 )
 
 func Test_loadConfig(t *testing.T) {
@@ -113,6 +112,7 @@ func Test_loadConfig(t *testing.T) {
 			}
 		})
 	}
+
 }
 
 func Test_loadQueryConfig(t *testing.T) {
@@ -218,6 +218,7 @@ func Test_loadQueryConfig(t *testing.T) {
 			}
 		})
 	}
+
 }
 
 func Test_loadNonExistingFiles(t *testing.T) {

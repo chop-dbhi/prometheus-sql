@@ -45,6 +45,7 @@ func main() {
 		flag.Usage()
 		log.Fatal("Error: You can specify either -queries or -queryDir")
 	}
+
 	var (
 		err     error
 		queries QueryList
@@ -57,6 +58,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+	
 	if queryDir != "" {
 		queries, err = loadQueriesInDir(queryDir, config)
 	} else {

@@ -75,14 +75,13 @@ func newConfig() *Config {
 	return &Config{Defaults: createDefaultsData()}
 }
 
-func appendDefaults(c Config) Config {
+func appendDefaults(c *Config) {
 	if c.Defaults.QueryInterval == 0 {
 		c.Defaults.QueryInterval = DefaultInterval
 	}
 	if c.Defaults.QueryTimeout == 0 {
 		c.Defaults.QueryTimeout = DefaultTimeout
 	}
-	return c
 }
 
 func validateConfig(c *Config) error {
@@ -94,6 +93,7 @@ func validateConfig(c *Config) error {
 			return fmt.Errorf("Properties are not defined for data source [%s]", name)
 		}
 	}
+
 	return nil
 }
 
@@ -113,6 +113,7 @@ func validateQuery(q *Query) error {
 	if q.Interval == 0 {
 		return fmt.Errorf("Interval must be greater than zero for query [%s]", q.Name)
 	}
+
 	return nil
 }
 
@@ -122,14 +123,17 @@ func loadConfig(file string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error reading config file: %s", err)
 	}
+
 	var c Config
 	if err := yaml.Unmarshal([]byte(b), &c); err != nil {
 		return nil, fmt.Errorf("Error decoding config file: %s", err)
 	}
-	c = appendDefaults(c)
+
+	appendDefaults(&c)
 	if err := validateConfig(&c); err != nil {
 		return nil, err
 	}
+
 	return &c, err
 }
 
@@ -140,22 +144,9 @@ func loadQueryConfig(queriesFile string, config *Config) (QueryList, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error opening queries file: %s", err)
 	}
+
 	defer file.Close()
 	return decodeQueries(file, config)
-}
-
-func useFallbackIfEmpty(value string, fallback string) string {
-	if value == "" {
-		return fallback
-	}
-	return value
-}
-
-func useFallbackIfZero(value time.Duration, fallback time.Duration) time.Duration {
-	if value == 0 {
-		return fallback
-	}
-	return value
 }
 
 func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
@@ -167,7 +158,6 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 	parsedQueries := make([]map[string]*Query, 0)
 
 	b, err := ioutil.ReadAll(r)
-
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +169,9 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 	for _, data := range parsedQueries {
 		for k, q := range data {
 			q.Name = k
-			q.DataSourceRef = useFallbackIfEmpty(q.DataSourceRef, config.Defaults.DataSourceRef)
+			if q.DataSourceRef == "" {
+				q.DataSourceRef = config.Defaults.DataSourceRef
+			}
 			if q.Driver == "" {
 				if q.DataSourceRef != "" && len(config.DataSources) > 0 {
 					var ds = config.DataSources[q.DataSourceRef]
@@ -187,8 +179,12 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 					q.Connection = ds.Properties
 				}
 			}
-			q.Interval = useFallbackIfZero(q.Interval, config.Defaults.QueryInterval)
-			q.Timeout = useFallbackIfZero(q.Timeout, config.Defaults.QueryTimeout)
+			if q.Interval == 0 {
+				q.Interval = config.Defaults.QueryInterval
+			}
+			if q.Timeout == 0 {
+				q.Timeout = config.Defaults.QueryTimeout
+			}
 			if q.ValueOnError == "" && config.Defaults.QueryValueOnError != "" {
 				q.ValueOnError = config.Defaults.QueryValueOnError
 			}
@@ -199,7 +195,9 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 
 			queries = append(queries, q)
 		}
+
 	}
+
 	return queries, nil
 }
 
@@ -210,6 +208,7 @@ func loadQueriesInDir(path string, config *Config) (QueryList, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for _, f := range files {
 		fn := f.Name()
 		if strings.HasSuffix(fn, ".yml") {
@@ -219,13 +218,16 @@ func loadQueriesInDir(path string, config *Config) (QueryList, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			q, err := decodeQueries(file, config)
 			if err != nil {
 				return nil, err
 			}
+
 			queries = append(queries, q...)
 			file.Close()
 		}
 	}
+
 	return queries, nil
 }
