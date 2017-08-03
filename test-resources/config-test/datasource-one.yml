@@ -1,0 +1,10 @@
+# PASS: One data source defined with all required keys
+data-sources:
+  mysql-test:
+    driver: mysql
+    properties:
+      host: localhost
+      port: 3306
+      user: root
+      password: unsecure
+      database: test

@@ -1,0 +1,6 @@
+# PASS: All possible defaults available
+defaults:
+  data-source: "my-ds"
+  query-interval: 15m
+  query-timeout: 5m
+  query-value-on-error: -1

@@ -1,0 +1,24 @@
+# Used for query test which needs data sources and defined default values
+defaults:
+  data-source: my-ds-1
+  query-interval: 15m
+  query-timeout: 5m
+  query-value-on-error: -1
+
+data-sources:
+  my-ds-1:
+    driver: mysql
+    properties:
+      host: localhost
+      port: 3306
+      user: root
+      password: unsecure
+      database: test
+  my-ds-2:
+    driver: postgresql
+    properties:
+      host: localhost
+      port: 5432
+      user: postgres
+      password: unsecure
+      database: test
