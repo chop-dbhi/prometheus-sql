@@ -19,12 +19,12 @@ dist-build:
 		-os "windows linux darwin" \
 		-arch "amd64" $(CMD_PATH) > /dev/null
 
-dist-zip:
-	cd dist && zip $(PROG_NAME)-darwin-amd64.zip darwin-amd64/*
-	cd dist && zip $(PROG_NAME)-linux-amd64.zip linux-amd64/*
+dist-pkg:
+	cd dist && tar -czvf $(PROG_NAME)-darwin-amd64.tar.gz darwin-amd64/*
+	cd dist && tar -czvf $(PROG_NAME)-linux-amd64.tar.gz linux-amd64/*
 	cd dist && zip $(PROG_NAME)-windows-amd64.zip windows-amd64/*
 
-dist: dist-build dist-zip
+dist: dist-build dist-pkg
 
 docker:
 	docker build -t ${IMAGE_NAME}:${GIT_SHA} .
