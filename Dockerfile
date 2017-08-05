@@ -1,6 +1,6 @@
 FROM frolvlad/alpine-glibc:alpine-3.5
 
-ARG PROMETHEUS_SQL_VERSION=1.1.0
+ARG PROMETHEUS_SQL_VERSION=1.2.0
 ARG PKG_FILE=prometheus-sql-linux-amd64.tar.gz
 ARG PKG_URL=https://github.com/chop-dbhi/prometheus-sql/releases/download/$PROMETHEUS_SQL_VERSION/$PKG_FILE
 
