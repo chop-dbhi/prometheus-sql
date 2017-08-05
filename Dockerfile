@@ -7,6 +7,9 @@ ARG PKG_URL=https://github.com/chop-dbhi/prometheus-sql/releases/download/$PROME
 RUN apk update
 RUN apk add curl
 
+# Workaround to publish Github release before curl fetches it.
+RUN sleep 60
+
 RUN mkdir -p /opt/prometheus-sql/bin \
     && curl --retry 5 --retry-delay 15 --retry-max-time 120 -SL $PKG_URL \
     | tar -xzC /opt/prometheus-sql/bin \
