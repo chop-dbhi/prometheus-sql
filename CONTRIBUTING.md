@@ -49,20 +49,14 @@ This section describes how you build prometheus-sql distribution packages.
 
 ### Build prometheus-sql Docker image locally
 
-1. Build distribution binaries as described in previous section.
+1. Go to the project root directory.
 
-2. Go into `dist` directory.
+2. Build Docker image:
 
-3. Start Simple HTTP server as a background process: `python -m SimpleHTTPServer &`
-
-4. Go back to the project root directory.
-
-5. Build Docker image:
-
-    Using Docker (for test only):
+    Using Docker (require Docker v17.06 or later):
     ```bash
-    docker build --tag dbhi/prometheus-sql --rm --build-arg BASE_URL=http://localhost:8000 --no-cache .
+    docker build --rm --no-cache --tag dbhi/prometheus-sql:latest --file Dockerfile.multi .
     ```
 
-6. Done! Docker image is now built and you can kill the Simple HTTP server process.
+3. Done!
 
