@@ -8,7 +8,7 @@ RUN apk update
 RUN apk add curl
 
 RUN mkdir -p /opt/prometheus-sql/bin \
-    && curl -SL $PKG_URL \
+    && curl --retry 5 --retry-delay 15 --retry-max-time 120 -SL $PKG_URL \
     | tar -xzC /opt/prometheus-sql/bin \
     && ln -s /opt/prometheus-sql/bin/linux-amd64/prometheus-sql /usr/local/bin/
 
