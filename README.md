@@ -31,7 +31,7 @@ This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) s
 ```shell
 Usage of prometheus-sql:
   -config string
-        Configuration file to define common data sources etc. (default "prometheus-sql.yml")
+        Configuration file to define common data sources etc.
   -host string
         Host of the service.
   -port int
