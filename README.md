@@ -49,7 +49,11 @@ Usage of prometheus-sql:
 
 A queries file is required for the application to know which data source to query and which queries that shall be monitored.
 
-In the repository there is an [example file](example-queries.yml) that you can have a look at.
+In the repository there is an [example file](examples/example-queries.yml) that you can have a look at.
+
+### Config file
+
+The config file is optional and can defined some default values for queries and data sources which can be referenced by queries. The benefit of referencing a data source will be reduction of duplication of database connection information. See example config file [here](examples/example-config.yml) and [queries file](examples/example-config-queries.yml) which utilizes the config information.
 
 ### Run via console
 

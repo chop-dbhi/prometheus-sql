@@ -1,0 +1,25 @@
+# Show all possible defaults keys
+defaults:
+  data-source: my-ds
+  query-interval: 10s
+  query-timeout: 5s
+  query-value-on-error: -1
+
+# Defined data sources
+data-sources:
+  my-ds:
+    driver: mysql
+    properties:
+      host: mysql
+      port: 3306
+      user: root
+      password: unsecure
+      database: test
+  my-ds-missing-user:
+    driver: mysql
+    properties:
+      host: mysql
+      port: 3306
+      user: test
+      password: unsecure
+      database: test

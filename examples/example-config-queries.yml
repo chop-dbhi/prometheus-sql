@@ -1,0 +1,54 @@
+# Simple setup instructions:
+#
+# docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=unsecure -d mysql:8
+# docker run -d --link mysql:mysql -p 5000:5000 --name sqlagent dbhi/sql-agent
+# docker run -it --link mysql:mysql --rm mysql:8 sh -c 'exec mysql -h"mysql" -P"3306" -uroot -p"unsecure"'
+#
+# mysql>
+# create database test;
+# use test;
+#
+# create table Companies (
+# 	id INTEGER NOT NULL AUTO_INCREMENT,
+# 	name VARCHAR(20), 
+# 	country VARCHAR(3),
+# 	PRIMARY KEY (ID)
+# );
+# insert into Companies (name, country) values ('Company1', 'USA');
+# insert into Companies (name, country) values ('Company1', 'SWE');
+# insert into Companies (name, country) values ('Company1', 'IRL');
+# insert into Companies (name, country) values ('Company2', 'IRL');
+#
+# select * from Companies;
+# +----------+---------+
+# | name     | country |
+# +----------+---------+
+# | Company1 | USA     |
+# | Company1 | SWE     |
+# | Company1 | IRL     |
+# | Company2 | IRL     |
+# +----------+---------+
+# 4 rows in set (0.00 sec)
+#
+# quit
+#
+# docker run -d -p 8080:8080 -v ${PWD}/example-config-queries.yml:/queries.yml -v ${PWD}/example-config.yml:/prometheus-sql.yml --link sqlagent:sqlagent --name prometheus-sql dbhi/prometheus-sql -service http://sqlagent:5000 -config prometheus-sql.yml
+# curl http://localhost:8080/metrics
+
+- nr_companies_per_country:
+    sql: >
+        select country, count(1) as cnt from Companies group by country
+    data-field: cnt
+
+# Missing database user, data source 'my-ds-missing-user' shall be used instead of the default 'my-ds'
+- error_missing_user:
+    data-source: my-ds-missing-user
+    sql: >
+        select * from dual
+    interval: 30s
+
+# Missing table
+- error_missing_table:
+    sql: >
+        select * from missing_table
+    interval: 30s

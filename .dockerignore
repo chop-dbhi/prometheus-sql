@@ -1,11 +1,11 @@
 .git/
 .vagrant/
+examples/
+test-resources/
 README.md
-LICENSE
-example-queries.yml
+CONTRIBUTING.md
 Vagrantfile
 docker-compose.yml
 gox
 debug
 debug.test
-test-resources/
