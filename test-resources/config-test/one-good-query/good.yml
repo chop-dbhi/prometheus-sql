@@ -1,0 +1,19 @@
+- storage_used_tb:
+    driver: mysql
+
+    connection:
+        host: 172.17.0.1
+        port: 3306
+        user: user
+        password: password
+        database: db1
+
+    sql: >
+        select
+          something, metric
+        from
+          somewhere;;
+
+    interval: 10m
+
+    data-field: metric

@@ -16,12 +16,13 @@ import (
 func main() {
 	log.Println("prometheus-sql starting up...")
 	var (
-		host        string
-		port        int
-		service     string
-		queriesFile string
-		queryDir    string
-		confFile    string
+		host                         string
+		port                         int
+		service                      string
+		queriesFile                  string
+		queryDir                     string
+		confFile                     string
+		tolerateInvalidQueryDirFiles bool
 	)
 
 	flag.StringVar(&host, "host", DefaultHost, "Host of the service.")
@@ -30,6 +31,7 @@ func main() {
 	flag.StringVar(&queriesFile, "queries", DefaultQueriesFile, "Path to file containing queries.")
 	flag.StringVar(&queryDir, "queryDir", DefaultQueriesDir, "Path to directory containing queries.")
 	flag.StringVar(&confFile, "config", DefaultConfFile, "Configuration file to define common data sources etc.")
+	flag.BoolVar(&tolerateInvalidQueryDirFiles, "lax", DefaultTolerateInvalidQueryDirFiles, "Tolerate invalid files in queryDir")
 
 	flag.Parse()
 
@@ -58,9 +60,9 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	
+
 	if queryDir != "" {
-		queries, err = loadQueriesInDir(queryDir, config)
+		queries, err = loadQueriesInDir(queryDir, config, tolerateInvalidQueryDirFiles)
 	} else {
 		queries, err = loadQueryConfig(queriesFile, config)
 	}

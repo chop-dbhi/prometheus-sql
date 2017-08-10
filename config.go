@@ -10,19 +10,20 @@ import (
 	"strings"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Default config values
 var (
-	DefaultHost        = ""
-	DefaultTimeout     = time.Minute
-	DefaultInterval    = time.Minute * 5
-	DefaultService     = ""
-	DefaultQueriesFile = "queries.yml"
-	DefaultQueriesDir  = ""
-	DefaultPort        = 8080
-	DefaultConfFile    = ""
+	DefaultHost                         = ""
+	DefaultTimeout                      = time.Minute
+	DefaultInterval                     = time.Minute * 5
+	DefaultService                      = ""
+	DefaultQueriesFile                  = "queries.yml"
+	DefaultQueriesDir                   = ""
+	DefaultPort                         = 8080
+	DefaultConfFile                     = ""
+	DefaultTolerateInvalidQueryDirFiles = false
 )
 
 // Config is the base data structure.
@@ -201,7 +202,7 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 	return queries, nil
 }
 
-func loadQueriesInDir(path string, config *Config) (QueryList, error) {
+func loadQueriesInDir(path string, config *Config, allowFileErrors bool) (QueryList, error) {
 	log.Printf("Load queries from directory [%s]", path)
 	queries := make(QueryList, 0)
 	files, err := ioutil.ReadDir(path)
@@ -220,12 +221,15 @@ func loadQueriesInDir(path string, config *Config) (QueryList, error) {
 			}
 
 			q, err := decodeQueries(file, config)
-			if err != nil {
+			file.Close()
+
+			if err == nil {
+				queries = append(queries, q...)
+			} else if allowFileErrors {
+				log.Printf("Ignoring error loading %s. err=%v", fn, err)
+			} else {
 				return nil, err
 			}
-
-			queries = append(queries, q...)
-			file.Close()
 		}
 	}
 
