@@ -235,9 +235,24 @@ func Test_loadNonExistingFiles(t *testing.T) {
 		return
 	}
 
-	_, err = loadQueriesInDir(file, newConfig())
+	_, err = loadQueriesInDir(file, newConfig(), false)
 	if err == nil {
 		t.Errorf("No errors even if query directory [%s] does not exist!", file)
 		return
+	}
+}
+
+func Test_allowBrokenQueryFileInDir(t *testing.T) {
+	//config should allow loading queries from a directory that contains invalid files; bad files should not
+	//stop good queries from running
+
+	//load a directory having one good and one bad query
+	q, err := loadQueriesInDir("test-resources/config-test/one-good-query", newConfig(), true)
+	//expect no error and 1 query
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(q) != 1 {
+		t.Fatal(len(q))
 	}
 }
