@@ -35,6 +35,8 @@ Usage of prometheus-sql:
         Configuration file to define common data sources etc.
   -host string
         Host of the service.
+  -lax
+        Tolerate invalid files in queryDir
   -port int
         Port of the service. (default 8080)
   -queries string
