@@ -1,0 +1,19 @@
+[[constraint]]
+  branch = "master"
+  name = "github.com/jpillora/backoff"
+
+[[constraint]]
+  name = "github.com/prometheus/client_golang"
+  version = "0.8.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/net"
+
+[[constraint]]
+  name = "gopkg.in/tylerb/graceful.v1"
+  version = "1.2.15"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
