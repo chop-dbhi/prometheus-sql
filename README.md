@@ -113,3 +113,22 @@ Alternately, use the `docker-compose.yml` file included in this repository. The 
 ## Contributing
 
 Read instructions [how to contribute](CONTRIBUTING.md) before you start.
+
+## FAQ
+
+**How do you I provide additional options to the database connection?**
+
+Additional options are set in the `config.yml` file, specifically as additional key-value pairs in the [connection map](https://github.com/chop-dbhi/prometheus-sql/blob/master/examples/example-queries.yml#L14-L19). These are passed to the [SQL Agent service](https://github.com/chop-dbhi/sql-agent#connection-options) which construct a DSN string to establish the connection on the backend (alternately you can set the `dsn` key as the full string).
+
+As an example, a common _gotcha_ when using Postgres in a development environment is to ignore SSL not being enabled on the server. This can be done by adding the `sslmode: disable` option in the connection map.
+
+```yaml
+    # ...
+    connection:
+        host: example.org
+        port: 5432
+        user: postgres
+        password: s3cre7
+        database: products
+        sslmode: disable
+```
