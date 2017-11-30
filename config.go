@@ -56,8 +56,9 @@ type Query struct {
 	Params        map[string]interface{}
 	Interval      time.Duration
 	Timeout       time.Duration
-	DataField     string `yaml:"data-field"`
-	ValueOnError  string `yaml:"value-on-error"`
+	DataField     string            `yaml:"data-field"`
+	SubMetrics    map[string]string `yaml:"sub-metrics"`
+	ValueOnError  string            `yaml:"value-on-error"`
 }
 
 // QueryList is a array or Queries

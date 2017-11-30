@@ -178,6 +178,38 @@ func Test_loadQueryConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "queries-submetrics",
+			args: args{
+				queriesFile: "test-resources/config-test/queries-submetrics.yml",
+				config:      c,
+			},
+			want: []*Query{
+				&Query{
+					Name:          "query_ds_1",
+					SQL:           `select 1 as "sum", 2 as "count" from dual`,
+					DataSourceRef: "my-ds-1",
+					Driver:        "mysql",
+					Connection: map[string]interface{}{
+						"host":     "localhost",
+						"port":     3306,
+						"user":     "root",
+						"password": "unsecure",
+						"database": "test",
+					},
+					Interval: time.Minute * 15,
+					Timeout:  time.Minute * 5,
+					Params:   nil,
+					SubMetrics: map[string]string{
+						"count": "count",
+						"sum":   "sum",
+					},
+					ValueOnError: "-1",
+					DataField:    "",
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "queries-compatibility",
 			args: args{
 				queriesFile: "test-resources/config-test/queries-compatibility.yml",
