@@ -1,0 +1,5 @@
+- query_ds_1:
+    sql: select 1 as "sum", 2 as "count" from dual
+    sub-metrics:
+      sum: sum
+      count: count

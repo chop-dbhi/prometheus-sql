@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"strconv"
 	"strings"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type QueryResult struct {
@@ -24,11 +25,15 @@ func NewQueryResult(q *Query) *QueryResult {
 	return r
 }
 
-func (r *QueryResult) registerMetric(facets map[string]interface{}) string {
+func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string) string {
 	labels := prometheus.Labels{}
+	metricName := r.Query.Name
+	if suffix != "" {
+		metricName = fmt.Sprintf("%s_%s", r.Query.Name, suffix)
+	}
 
 	jsonData, _ := json.Marshal(facets)
-	resultKey := string(jsonData)
+	resultKey := fmt.Sprintf("%s%s", metricName, string(jsonData))
 
 	for k, v := range facets {
 		labels[k] = strings.ToLower(fmt.Sprintf("%v", v))
@@ -38,9 +43,9 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}) string {
 		return resultKey
 	}
 
-	fmt.Println("Registering metric", r.Query.Name, "with facets", resultKey)
+	fmt.Println("Registering metric", resultKey)
 	r.Result[resultKey] = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name:        fmt.Sprintf("query_result_%s", r.Query.Name),
+		Name:        fmt.Sprintf("query_result_%s", metricName),
 		Help:        "Result of an SQL query",
 		ConstLabels: labels,
 	})
@@ -75,35 +80,58 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]bool, error) {
 		return nil, errors.New("There is more than one row in the query result - with a single column")
 	}
 
+	if r.Query.DataField != "" && len(r.Query.SubMetrics) > 0 {
+		return nil, errors.New("sub-metrics are not compatible with data-field")
+	}
+
+	submetrics := map[string]string{}
+
+	if len(r.Query.SubMetrics) > 0 {
+		submetrics = r.Query.SubMetrics
+	} else {
+		submetrics = map[string]string{"": r.Query.DataField}
+	}
+
 	facetsWithResult := make(map[string]bool, 0)
 	for _, row := range recs {
-		facet := make(map[string]interface{})
-		var (
-			dataVal   interface{}
-			dataFound bool
-		)
-		if len(row) > 1 && r.Query.DataField == "" {
-			return nil, errors.New("Data field not specified for multi-column query")
-		}
-		for k, v := range row {
-			if len(row) > 1 && strings.ToLower(k) != r.Query.DataField { // facet field, add to facets
-				facet[strings.ToLower(fmt.Sprintf("%v", k))] = v
-			} else { // this is the actual gauge data
-				dataVal = v
-				dataFound = true
+		for suffix, datafield := range submetrics {
+			facet := make(map[string]interface{})
+			var (
+				dataVal   interface{}
+				dataFound bool
+			)
+			for k, v := range row {
+				if len(row) > 1 && strings.ToLower(k) != datafield { // facet field, add to facets
+					submetric := false
+					for _, n := range submetrics {
+						if strings.ToLower(k) == n {
+							submetric = true
+						}
+					}
+					// it is a facet field and not a submetric field
+					if !submetric {
+						facet[strings.ToLower(fmt.Sprintf("%v", k))] = v
+					}
+				} else { // this is the actual gauge data
+					if dataFound {
+						return nil, errors.New("Data field not specified for multi-column query")
+					}
+					dataVal = v
+					dataFound = true
+				}
 			}
-		}
 
-		if !dataFound {
-			return nil, errors.New("Data field not found in result set")
-		}
+			if !dataFound {
+				return nil, errors.New("Data field not found in result set")
+			}
 
-		key := r.registerMetric(facet)
-		err := setValueForResult(r.Result[key], dataVal)
-		if err != nil {
-			return nil, err
+			key := r.registerMetric(facet, suffix)
+			err := setValueForResult(r.Result[key], dataVal)
+			if err != nil {
+				return nil, err
+			}
+			facetsWithResult[key] = true
 		}
-		facetsWithResult[key] = true
 	}
 
 	return facetsWithResult, nil
@@ -114,7 +142,7 @@ func (r *QueryResult) RemoveMissingMetrics(facetsWithResult map[string]bool) {
 		if _, ok := facetsWithResult[key]; ok {
 			continue
 		}
-		fmt.Println("Unregistering metric", r.Query.Name, "with facets", key)
+		fmt.Println("Unregistering metric", key)
 		prometheus.Unregister(m)
 		delete(r.Result, key)
 	}

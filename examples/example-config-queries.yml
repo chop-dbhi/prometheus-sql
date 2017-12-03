@@ -52,3 +52,15 @@
     sql: >
         select * from missing_table
     interval: 30s
+
+# Sub queries
+# This will register two metrics:
+# - response_time_count with cnt as value
+# - response_time_sum with rt as value
+- response_time:
+    sql: >
+        select count(*) as cnt, sum(response_time) as rt from requests
+    sub-metrics:
+      count: cnt
+      sum: rt
+    interval: 30s
