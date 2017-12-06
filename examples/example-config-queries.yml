@@ -64,3 +64,15 @@
       count: cnt
       sum: rt
     interval: 30s
+
+# Missing metrics
+# This will replace missing values with 0.
+# It means that if we get a facet {name="foo"},
+# it will be replaced by 0 when it is no longer fetched.
+- count_by_name:
+    sql: >
+        select count(*) as cnt, name from requests
+    data-field: cnt
+    replace-missing: true
+    replace-value: 0
+    interval: 30s
