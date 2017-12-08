@@ -4,6 +4,7 @@ prometheus-sql.exe
 .idea
 .vagrant
 vendor
+vendor.orig
 dist
 gox
 .vscode
