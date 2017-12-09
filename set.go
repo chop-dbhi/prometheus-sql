@@ -137,13 +137,18 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]bool, error) {
 	return facetsWithResult, nil
 }
 
-func (r *QueryResult) RemoveMissingMetrics(facetsWithResult map[string]bool) {
+func (r *QueryResult) DealWithMissingMetrics(facetsWithResult map[string]bool) {
 	for key, m := range r.Result {
 		if _, ok := facetsWithResult[key]; ok {
 			continue
 		}
-		fmt.Println("Unregistering metric", key)
-		prometheus.Unregister(m)
-		delete(r.Result, key)
+		if r.Query.ReplaceMissing {
+			fmt.Printf("Resetting metric %v to %v\n", key, r.Query.ReplaceValue)
+			m.Set(r.Query.ReplaceValue)
+		} else {
+			fmt.Println("Unregistering metric", key)
+			prometheus.Unregister(m)
+			delete(r.Result, key)
+		}
 	}
 }

@@ -43,7 +43,7 @@ func (w *Worker) SetMetrics(recs records) {
 		return
 	}
 
-	w.result.RemoveMissingMetrics(list)
+	w.result.DealWithMissingMetrics(list)
 }
 
 func (w *Worker) Fetch(url string) (records, error) {

@@ -48,17 +48,19 @@ type DataSource struct {
 
 // Query defines a SQL statement and parameters as well as configuration for the monitoring behavior
 type Query struct {
-	Name          string
-	DataSourceRef string `yaml:"data-source"`
-	Driver        string
-	Connection    map[string]interface{}
-	SQL           string
-	Params        map[string]interface{}
-	Interval      time.Duration
-	Timeout       time.Duration
-	DataField     string            `yaml:"data-field"`
-	SubMetrics    map[string]string `yaml:"sub-metrics"`
-	ValueOnError  string            `yaml:"value-on-error"`
+	Name           string
+	DataSourceRef  string `yaml:"data-source"`
+	Driver         string
+	Connection     map[string]interface{}
+	SQL            string
+	Params         map[string]interface{}
+	Interval       time.Duration
+	Timeout        time.Duration
+	DataField      string            `yaml:"data-field"`
+	SubMetrics     map[string]string `yaml:"sub-metrics"`
+	ValueOnError   string            `yaml:"value-on-error"`
+	ReplaceMissing bool              `yaml:"replace-missing"`
+	ReplaceValue   float64           `yaml:"replace-value"`
 }
 
 // QueryList is a array or Queries
