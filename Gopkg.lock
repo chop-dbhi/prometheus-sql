@@ -56,10 +56,10 @@
   revision = "a6e9df898b1336106c743392c48ee0b71f5c4efa"
 
 [[projects]]
-  branch = "release-branch.go1.8"
+  branch = "release-branch.go1.9"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "186fd3fc8194a5e9980a82230d69c1ff7134229f"
+  revision = "ab5485076ff3407ad2d02db054635913f017b0ed"
 
 [[projects]]
   name = "gopkg.in/tylerb/graceful.v1"
@@ -76,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d34be8a0ca137cec981a94166aef59f4d48bd48ec1fbec52bc4023f4cf4cdbc2"
+  inputs-digest = "91cd5a93e693c0ea21fd46889d13a37998c06313483320367c7408fd4e270485"
   solver-name = "gps-cdcl"
   solver-version = 1
