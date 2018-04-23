@@ -1,0 +1,12 @@
+defaults:
+  data-source: ${DEFAULT_DATA_SOURCE}
+
+data-sources:
+  mysql:
+    driver: mysql
+    properties:
+      host: ${DB_HOST}
+      port: 3306
+      user: $DB_USER
+      password: $DB_PASS
+      database: $DB_NAME

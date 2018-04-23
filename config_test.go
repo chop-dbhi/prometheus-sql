@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -286,5 +287,41 @@ func Test_allowBrokenQueryFileInDir(t *testing.T) {
 	}
 	if len(q) != 1 {
 		t.Fatal(len(q))
+	}
+}
+
+func Test_expandEnvFile(t *testing.T) {
+	os.Setenv("DEFAULT_DATA_SOURCE", "mysql")
+	os.Setenv("DB_HOST", "localhost")
+	os.Setenv("DB_PORT", "")
+	os.Setenv("DB_USER", "user")
+	os.Setenv("DB_PASS", "s3cr3t")
+	// DB_NAME not set
+
+	file := "test-resources/config-test/expand-env.yml"
+	got, err := loadConfig(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := &Config{
+		Defaults: createDefaultsData(),
+		DataSources: map[string]DataSource{
+			"mysql": {
+				Driver: "mysql",
+				Properties: map[string]interface{}{
+					"host":     "localhost",
+					"port":     3306,
+					"user":     "user",
+					"password": "s3cr3t",
+					"database": nil,
+				},
+			},
+		},
+	}
+	want.Defaults.DataSourceRef = "mysql"
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("loadConfig() = %v, want %v", got, want)
 	}
 }

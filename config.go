@@ -126,8 +126,11 @@ func loadConfig(file string) (*Config, error) {
 		return nil, fmt.Errorf("Error reading config file: %s", err)
 	}
 
+	// Expand environment variables.
+	b = []byte(os.ExpandEnv(string(b)))
+
 	var c Config
-	if err := yaml.Unmarshal([]byte(b), &c); err != nil {
+	if err := yaml.Unmarshal(b, &c); err != nil {
 		return nil, fmt.Errorf("Error decoding config file: %s", err)
 	}
 
