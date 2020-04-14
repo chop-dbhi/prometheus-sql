@@ -27,13 +27,14 @@ var defaultBackoff = backoff.Backoff{
 }
 
 type Worker struct {
-	query   *Query
-	payload []byte
-	client  *http.Client
-	result  *QueryResult
-	log     *log.Logger
-	backoff backoff.Backoff
-	ctx     context.Context
+	query       *Query
+	payload     []byte
+	client      *http.Client
+	result      *QueryResult
+	log         *log.Logger
+	backoff     backoff.Backoff
+	ctx         context.Context
+	lastRecords []record // store last successfull records (will be used in case of error)
 }
 
 func (w *Worker) SetMetrics(recs records) {
@@ -44,6 +45,7 @@ func (w *Worker) SetMetrics(recs records) {
 	}
 
 	w.result.RegisterMetrics(list)
+	w.lastRecords = recs
 }
 
 func (w *Worker) Fetch(url string) (records, error) {
@@ -82,13 +84,7 @@ func (w *Worker) Fetch(url string) (records, error) {
 			break
 		}
 
-		if w.query.ValueOnError != "" {
-			w.SetMetrics([]record{
-				map[string]interface{}{
-					"error": w.query.ValueOnError,
-				},
-			})
-		}
+		w.setMetricsValueOnError()
 
 		// Backoff on an error.
 		w.log.Print(err)
@@ -143,6 +139,26 @@ func (w *Worker) Start(url string) {
 			tick()
 		}
 	}
+}
+
+// Set metrics with the provided value-on-error
+func (w *Worker) setMetricsValueOnError() {
+	// skip if value-on-error is not set
+	if w.query.ValueOnError != "" {
+		return
+	}
+
+	if w.lastRecords == nil {
+		w.log.Printf("Could not set error value becaue there is no previous record")
+		return
+	}
+
+	// update value
+	for _, record := range w.lastRecords {
+		record["value"] = w.query.ValueOnError
+	}
+
+	w.SetMetrics(w.lastRecords)
 }
 
 // NewWorker creates a new worker for a query.

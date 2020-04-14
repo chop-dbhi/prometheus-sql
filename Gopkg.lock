@@ -3,79 +3,122 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:d20bdb6bf44087574af3139835946875bb098440426785282c741865b7bc66d3"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
+  pruneopts = ""
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
+  digest = "1:a24a87dc28e137946d37f585b2f5a955e24e22fdb4cc3244167c86c1bb7d5c65"
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
+  pruneopts = ""
   revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
   version = "v0.5"
 
 [[projects]]
   branch = "master"
+  digest = "1:0c739f8ca8be942325dcb9a932ca40bfb77c1bb0a637d69a53166b302eb3a3c2"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
+  pruneopts = ""
   revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
 
 [[projects]]
   branch = "master"
+  digest = "1:ef0f9731bc6c3c59396adc50f36da36ca98c704812c449794f9326f7bc64b5f1"
   name = "github.com/jpillora/backoff"
   packages = ["."]
+  pruneopts = ""
   revision = "8eab2debe79d12b7bd3d10653910df25fa9552ba"
 
 [[projects]]
+  digest = "1:da0ae6b7e9dee808befe2fd96fba4b6b607a2dbb744e13fc7aae48a592edb06d"
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
+  pruneopts = ""
   revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:981835985f655d1d380cc6aa7d9fa9ad7abfaf40c75da200fd40d864cd05a7c3"
   name = "github.com/prometheus/client_golang"
-  packages = ["prometheus","prometheus/promhttp"]
+  packages = [
+    "prometheus",
+    "prometheus/promhttp",
+  ]
+  pruneopts = ""
   revision = "c5b7fccd204277076155f10851dad72b76a49317"
   version = "v0.8.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:83bf37d060fca77e959fe5ceee81e58bbd1b01836f4addc70043a948e9912547"
   name = "github.com/prometheus/client_model"
   packages = ["go"]
+  pruneopts = ""
   revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
 
 [[projects]]
   branch = "master"
+  digest = "1:7221d79e41a24b2245d06f331d0825b479a9acd0bd05a8353806c7bf38395795"
   name = "github.com/prometheus/common"
-  packages = ["expfmt","internal/bitbucket.org/ww/goautoneg","model"]
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = ""
   revision = "2e54d0b93cba2fd133edc32211dcc32c06ef72ca"
 
 [[projects]]
   branch = "master"
+  digest = "1:c7bb6d21c9d053d4a62a092a1c188bb05211b46a071df21792310a6124bec3c3"
   name = "github.com/prometheus/procfs"
-  packages = [".","xfs"]
+  packages = [
+    ".",
+    "xfs",
+  ]
+  pruneopts = ""
   revision = "a6e9df898b1336106c743392c48ee0b71f5c4efa"
 
 [[projects]]
   branch = "release-branch.go1.9"
+  digest = "1:b5c9fe19d77ca5c03839fe043227394d2f1b3afb7c9eaa55bd2fe20c5bb14268"
   name = "golang.org/x/net"
   packages = ["context"]
+  pruneopts = ""
   revision = "ab5485076ff3407ad2d02db054635913f017b0ed"
 
 [[projects]]
+  digest = "1:1aa21013b2159910cb3c5f74b92e012f2e19de180afbce9866c1b3429d1706ab"
   name = "gopkg.in/tylerb/graceful.v1"
   packages = ["."]
+  pruneopts = ""
   revision = "4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb"
   version = "v1.2.15"
 
 [[projects]]
   branch = "v2"
+  digest = "1:f769ed60e075e4221612c2f4162fccc9d3795ef358fa463425e3b3d7a5debb27"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
+  pruneopts = ""
   revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "91cd5a93e693c0ea21fd46889d13a37998c06313483320367c7408fd4e270485"
+  input-imports = [
+    "github.com/gogo/protobuf/proto",
+    "github.com/jpillora/backoff",
+    "github.com/prometheus/client_golang/prometheus",
+    "github.com/prometheus/client_golang/prometheus/promhttp",
+    "github.com/prometheus/client_model/go",
+    "golang.org/x/net/context",
+    "gopkg.in/tylerb/graceful.v1",
+    "gopkg.in/yaml.v2",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
