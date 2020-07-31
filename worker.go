@@ -163,6 +163,11 @@ func (w *Worker) setMetricsValueOnError() {
 
 // NewWorker creates a new worker for a query.
 func NewWorker(ctx context.Context, q *Query) *Worker {
+	prefix := fmt.Sprintf("[%s/%s/%s] ", q.Name, q.Connection["host"], q.Connection["database"])
+	logger := log.New(os.Stderr, prefix, log.LstdFlags+log.Lmsgprefix)
+
+	logger.Printf("Creating a new worker")
+
 	// Encode the payload once for all subsequent requests.
 	payload, err := json.Marshal(map[string]interface{}{
 		"driver":     q.Driver,
@@ -180,7 +185,7 @@ func NewWorker(ctx context.Context, q *Query) *Worker {
 		result:  NewQueryResult(q),
 		payload: payload,
 		backoff: defaultBackoff,
-		log:     log.New(os.Stderr, fmt.Sprintf("[%s] ", q.Name), log.LstdFlags),
+		log:     logger,
 		client: &http.Client{
 			Timeout: q.Timeout,
 		},
