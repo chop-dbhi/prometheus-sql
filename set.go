@@ -77,6 +77,7 @@ func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	default:
 		return fmt.Errorf("Unhandled type %s", t)
 	}
+	r.SetToCurrentTime()
 	return nil
 }
 
