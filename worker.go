@@ -144,16 +144,16 @@ func (w *Worker) Start(url string) {
 // Set metrics with the provided value-on-error
 func (w *Worker) setMetricsValueOnError() {
 	// skip if value-on-error is not set
-	if w.query.ValueOnError != "" {
+	if w.query.ValueOnError == "" {
 		return
 	}
 
 	if w.lastRecords == nil {
-		w.log.Printf("Could not set error value becaue there is no previous record")
+		w.log.Printf("Could not set error value because there are no previous records")
 		return
 	}
 
-	// update value
+	// update the value
 	for _, record := range w.lastRecords {
 		record["value"] = w.query.ValueOnError
 	}
