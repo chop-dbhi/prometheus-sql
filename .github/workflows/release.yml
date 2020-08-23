@@ -1,0 +1,106 @@
+name: Release
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+
+  release_pkg:
+    name: Build release packages
+    needs: create_release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [darwin, linux, windows]
+        include:
+          - os: darwin
+            arch: amd64
+            pkg_cmd: tar -czvf
+            pkg_file: prometheus-sql-darwin-amd64.tar.gz
+            content_type: application/tar+gzip
+          - os: linux
+            arch: amd64
+            pkg_cmd: tar -czvf
+            pkg_file: prometheus-sql-linux-amd64.tar.gz
+            content_type: application/tar+gzip
+          - os: windows
+            arch: amd64
+            pkg_cmd: zip
+            pkg_file: prometheus-sql-windows-amd64.zip
+            content_type: application/zip
+
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Check formatting
+        run: |
+          chmod +x $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
+          $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
+
+      - name: Verify go modules
+        run: go mod verify
+
+      - name: Get short commit hash and date
+        id: get_git_info
+        run: echo ::set-output name=HASH_DATE::$(git log -1 --pretty=format:"%h (%ci)" .)
+
+      - name: Build
+        run: |
+          mkdir -p dist/${GOOS}-${GOARCH}
+          go build -v -ldflags "-X \"main.buildVersion=${{ steps.get_git_info.outputs.HASH_DATE }}\"" -o dist/${GOOS}-${GOARCH}/ .
+
+      - name: Package
+        run: |
+          cd dist && ${{ matrix.pkg_cmd }} ${{ matrix.pkg_file }} ${GOOS}-${GOARCH}/*
+          pwd && ls -l
+
+      - name: Upload asset to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ matrix.pkg_file }}
+          asset_name: ${{ matrix.pkg_file }}
+          asset_content_type: ${{ matrix.content_type }}
+
+      - name: Build Docker image and push
+        if: matrix.os == 'linux' && env.DOCKER_USERNAME != ''
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: dbhi/prometheus-sql
+          tag_with_sha: true
+          tag_with_ref: true
+          add_git_labels: true
+          dockerfile: Dockerfile.github
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}

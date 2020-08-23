@@ -1,16 +1,5 @@
-# Requires Docker v17.06 or later
-FROM golang:1.9 as builder
-RUN mkdir -p /go/src/app
-WORKDIR /go/src/app
-COPY . /go/src/app
-RUN go-wrapper download -u github.com/golang/dep/cmd/dep
-RUN go-wrapper install github.com/golang/dep/cmd/dep
-RUN dep ensure
-RUN go-wrapper install
+FROM dbhi/prometheus-sql:latest
 
-FROM frolvlad/alpine-glibc:alpine-3.6
-COPY --from=builder /go/bin/app /usr/local/bin/prometheus-sql
-EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/prometheus-sql", "-host", "0.0.0.0"]
-# Default command assumes the SQL agent is linked.
-CMD ["-service", "http://sqlagent:5000"]
+# Dummy just to get text on Docker Hub to be updated automatically and link to github.
+# This MUST be pushed with tag other than "latest", i.e. "dummy" since Github Actions
+# will push the actual images.

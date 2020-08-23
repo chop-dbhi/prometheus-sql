@@ -1,0 +1,9 @@
+FROM frolvlad/alpine-glibc:alpine-3.6
+
+ARG copy_file=./dist/linux-amd64/prometheus-sql
+
+COPY ${copy_file} /usr/local/bin/
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/prometheus-sql", "-host", "0.0.0.0"]
+# Default command assumes the SQL agent is linked.
+CMD ["-service", "http://sqlagent:5000"]
