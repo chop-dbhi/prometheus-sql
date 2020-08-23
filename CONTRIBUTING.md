@@ -64,7 +64,7 @@ export GO111MODULE=on
     Using Docker (require Docker v17.06 or later):
 
     ```bash
-    docker build --rm --no-cache --build-arg copy_file=./prometheus-sql --tag dbhi/prometheus-sql:latest --file Dockerfile.github .
+    docker build --rm --no-cache --tag dbhi/prometheus-sql:latest .
     ```
 
 4. Done!
