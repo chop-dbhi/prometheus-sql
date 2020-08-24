@@ -55,7 +55,7 @@ In the repository there is an [example file](examples/example-queries.yml) that 
 
 ### Config file
 
-The config file is optional and can defined some default values for queries and data sources which can be referenced by queries. The benefit of referencing a data source will be reduction of duplication of database connection information. See example config file [here](examples/example-config.yml) and [queries file](examples/example-config-queries.yml) which utilizes the config information.
+The config file is optional and can defined some default values for queries and data sources which can be referenced by queries. The benefit of referencing a data source will be reduction of duplication of database connection information. See example config file [here](examples/working_example/config.yml) and [queries file](examples/working_example/queries.yml) which utilizes the config information.
 
 ### Run via console
 
