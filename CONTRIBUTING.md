@@ -27,36 +27,44 @@ However, for those individuals who want a bit more guidance on the best way to c
 
 Please send a [GitHub Pull Request to prometheus-sql](https://github.com/chop-dbhi/prometheus-sql/pull/new/master) with a clear list of what you've done (read more about [pull requests](http://help.github.com/pull-requests/)).
 
-## How To Build
+## How To Build locally for test
 
-### Build distribution packages
+### Build binary and run tests
 
-This section describes how you build prometheus-sql distribution packages.
+*Important!* Since Go modules are used make sure you have set environment variable `GO111MODULE`:
 
-1. Build prometheus-sql packages for several platforms:
-
-    Using Make:
-    ```bash
-    make prepare dist
-    ```
-
-    Using Docker:
-    ```bash
-    docker run --rm -v ${PWD}:/go/bin -v ${PWD}:/usr/src/myapp -w /usr/src/myapp golang:1.8 bash -c 'apt-get update && apt-get -y install zip && make prepare dist'
-    ```
-
-2. All binaries produced are now located in directories under the `dist` directory.
-
-### Build prometheus-sql Docker image locally
+```bash
+export GO111MODULE=on
+```
 
 1. Go to the project root directory.
 
-2. Build Docker image:
+2. Build prometheus-sql:
 
-    Using Docker (require Docker v17.06 or later):
     ```bash
-    docker build --rm --no-cache --tag dbhi/prometheus-sql:latest --file Dockerfile.multi .
+    go build
+    # To build for other platforms
+    # GOOS=windows GOARCH=amd64 go build
     ```
 
-3. Done!
+3. Run tests
 
+    ```bash
+    go test
+    ```
+
+### Build Docker image
+
+1. Go to the project root directory.
+
+2. Follow steps above to build binary
+
+3. Build Docker image:
+
+    Using Docker (require Docker v17.06 or later):
+
+    ```bash
+    docker build --rm --no-cache --tag dbhi/prometheus-sql:latest .
+    ```
+
+4. Done!

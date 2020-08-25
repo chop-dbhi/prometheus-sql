@@ -1,0 +1,36 @@
+version: "2.4"
+services:
+    sqlagent:
+        image: dbhi/sql-agent
+        links:
+            - mysql:mysql
+        depends_on:
+            - mysql
+
+    prometheus-sql:
+        image: dbhi/prometheus-sql
+        links:
+            - sqlagent:sqlagent
+        depends_on:
+            - sqlagent
+        ports:
+            - 8080:8080
+        command:
+            - -config
+            - /config.yml
+            - -service
+            - http://sqlagent:5000
+        # Specify where the queries file is mounted on the host.
+        volumes:
+            - ${PWD}/config.yml:/config.yml
+            - ${PWD}/queries.yml:/queries.yml
+
+    mysql:
+        image: mysql:8
+        volumes:
+            - ${PWD}/:/docker-entrypoint-initdb.d/
+        environment:
+            MYSQL_ROOT_PASSWORD: unsecure
+            MYSQL_USER: test
+            MYSQL_PASSWORD: unsecure
+            MYSQL_DATABASE: test
