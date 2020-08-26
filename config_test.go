@@ -56,7 +56,7 @@ func Test_loadConfig(t *testing.T) {
 			args: args{file: "test-resources/config-test/datasource-one.yml"},
 			want: &Config{Defaults: createDefaultsData(),
 				DataSources: map[string]DataSource{
-					"mysql-test": DataSource{
+					"mysql-test": {
 						Driver: "mysql",
 						Properties: map[string]interface{}{
 							"host":     "localhost",
@@ -75,7 +75,7 @@ func Test_loadConfig(t *testing.T) {
 			args: args{file: "test-resources/config-test/datasource-two.yml"},
 			want: &Config{Defaults: createDefaultsData(),
 				DataSources: map[string]DataSource{
-					"mysql-test": DataSource{
+					"mysql-test": {
 						Driver: "mysql",
 						Properties: map[string]interface{}{
 							"host":     "localhost",
@@ -85,7 +85,7 @@ func Test_loadConfig(t *testing.T) {
 							"database": "test",
 						},
 					},
-					"mysql-test-2": DataSource{
+					"mysql-test-2": {
 						Driver: "mysql-2",
 						Properties: map[string]interface{}{
 							"host":     "localhost-2",
@@ -139,7 +139,7 @@ func Test_loadQueryConfig(t *testing.T) {
 				config:      c,
 			},
 			want: []*Query{
-				&Query{
+				{
 					Name:          "query_ds_1",
 					DataSourceRef: "my-ds-1",
 					Driver:        "mysql",
@@ -157,7 +157,7 @@ func Test_loadQueryConfig(t *testing.T) {
 					DataField:    "",
 					ValueOnError: "0",
 				},
-				&Query{
+				{
 					Name:          "query_ds_2",
 					DataSourceRef: "my-ds-2",
 					Driver:        "postgresql",
@@ -185,7 +185,7 @@ func Test_loadQueryConfig(t *testing.T) {
 				config:      c,
 			},
 			want: []*Query{
-				&Query{
+				{
 					Name:          "query_ds_1",
 					SQL:           `select 1 as "sum", 2 as "count" from dual`,
 					DataSourceRef: "my-ds-1",
@@ -217,7 +217,7 @@ func Test_loadQueryConfig(t *testing.T) {
 				config:      newConfig(),
 			},
 			want: []*Query{
-				&Query{
+				{
 					Name:   "num_products",
 					Driver: "postgresql",
 					Connection: map[string]interface{}{

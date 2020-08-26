@@ -26,6 +26,7 @@ var defaultBackoff = backoff.Backoff{
 	Factor: 2,
 }
 
+// Worker is responsible for fetching data via SQL Agent
 type Worker struct {
 	query   *Query
 	payload []byte
@@ -36,7 +37,7 @@ type Worker struct {
 	ctx     context.Context
 }
 
-func (w *Worker) SetMetrics(recs records) {
+func (w *Worker) setMetrics(recs records) {
 	list, err := w.result.SetMetrics(recs)
 	if err != nil {
 		w.log.Printf("Error setting metrics: %s", err)
@@ -46,7 +47,8 @@ func (w *Worker) SetMetrics(recs records) {
 	w.result.RegisterMetrics(list)
 }
 
-func (w *Worker) Fetch(url string) (records, error) {
+// Fetch connect to SQL Agent and fetches records
+func (w *Worker) fetch(url string) (records, error) {
 	var (
 		t    time.Time
 		err  error
@@ -83,7 +85,7 @@ func (w *Worker) Fetch(url string) (records, error) {
 		}
 
 		if w.query.ValueOnError != "" {
-			w.SetMetrics([]record{
+			w.setMetrics([]record{
 				map[string]interface{}{
 					"error": w.query.ValueOnError,
 				},
@@ -114,14 +116,15 @@ func (w *Worker) Fetch(url string) (records, error) {
 		return nil, err
 	}
 
-	w.SetMetrics(recs)
+	w.setMetrics(recs)
 
 	return recs, nil
 }
 
+// Start fetching data from specified URL
 func (w *Worker) Start(url string) {
 	tick := func() {
-		_, err := w.Fetch(url)
+		_, err := w.fetch(url)
 		if err != nil {
 			w.log.Printf("Error fetching records: %s", err)
 			return

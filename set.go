@@ -10,19 +10,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metricStatus int
+// MetricStatus indicate if metric is registered or unregistered
+type MetricStatus int
 
 const (
-	registered metricStatus = iota
+	registered MetricStatus = iota
 	unregistered
 )
 
+// QueryResult contains query results
 type QueryResult struct {
 	Query  *Query
 	Result map[string]prometheus.Gauge // Internally we represent each facet with a JSON-encoded string for simplicity
 }
 
-// NewSetMetrics initializes a new metrics collector.
+// NewQueryResult initializes a new metrics collector.
 func NewQueryResult(q *Query) *QueryResult {
 	r := &QueryResult{
 		Query:  q,
@@ -32,7 +34,7 @@ func NewQueryResult(q *Query) *QueryResult {
 	return r
 }
 
-func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string) (string, metricStatus) {
+func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string) (string, MetricStatus) {
 	labels := prometheus.Labels{}
 	metricName := r.Query.Name
 	if suffix != "" {
@@ -80,7 +82,8 @@ func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	return nil
 }
 
-func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) {
+// SetMetrics set and register metrics
+func (r *QueryResult) SetMetrics(recs records) (map[string]MetricStatus, error) {
 	// Queries that return only one record should only have one column
 	if len(recs) > 1 && len(recs[0]) == 1 {
 		return nil, errors.New("There is more than one row in the query result - with a single column")
@@ -98,7 +101,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 		submetrics = map[string]string{"": r.Query.DataField}
 	}
 
-	facetsWithResult := make(map[string]metricStatus, 0)
+	facetsWithResult := make(map[string]MetricStatus, 0)
 	for _, row := range recs {
 		for suffix, datafield := range submetrics {
 			facet := make(map[string]interface{})
@@ -143,7 +146,8 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 	return facetsWithResult, nil
 }
 
-func (r *QueryResult) RegisterMetrics(facetsWithResult map[string]metricStatus) {
+// RegisterMetrics registers and unregister gauges
+func (r *QueryResult) RegisterMetrics(facetsWithResult map[string]MetricStatus) {
 	for key, m := range r.Result {
 		status, ok := facetsWithResult[key]
 		if !ok {
