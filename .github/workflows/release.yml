@@ -67,6 +67,7 @@ jobs:
             $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
 
       - name: Linting
+        if: matrix.os == 'linux'
         run: |
           go get -u golang.org/x/lint/golint
           golint .
