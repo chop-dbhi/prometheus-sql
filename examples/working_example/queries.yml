@@ -23,7 +23,7 @@
 # - response_time_sum with rt as value
 - response_time:
     sql: >
-        select count(*) as cnt, sum(response_time) as rt from requests
+        select count(*) as cnt, sum(response_time) as rt from Requests
     sub-metrics:
       count: cnt
       sum: rt
