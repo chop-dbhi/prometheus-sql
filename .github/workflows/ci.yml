@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: '*'
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -30,13 +30,19 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Check formatting
-        run: |
-            chmod +x $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
-            $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
-
       - name: Verify go modules
         run: go mod verify
+
+      - name: Check formatting
+        run: |
+          chmod +x $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
+          $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
+
+      - name: Linting
+        if: matrix.os == 'linux'
+        run: |
+          go get -u golang.org/x/lint/golint
+          golint .
 
       - name: Get short commit hash and date
         id: get_git_info

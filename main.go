@@ -81,6 +81,7 @@ func main() {
 	// Shared context. Close the cxt.Done channel to stop the workers.
 	ctx, cancel := context.WithCancel(context.Background())
 
+	type contextKey string
 	var w *Worker
 
 	mux := http.NewServeMux()
@@ -89,7 +90,7 @@ func main() {
 		// Create a new worker and start it in its own goroutine.
 		// type key string
 		// const wgKey key = "wg"
-		w = NewWorker(context.WithValue(ctx, "wg", wg), q)
+		w = NewWorker(context.WithValue(ctx, contextKey("wg"), wg), q)
 		go w.Start(service)
 	}
 

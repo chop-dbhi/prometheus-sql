@@ -26,6 +26,7 @@ var defaultBackoff = backoff.Backoff{
 	Factor: 2,
 }
 
+// Worker is responsible for fetching data via SQL Agent
 type Worker struct {
 	query   *Query
 	payload []byte
@@ -36,17 +37,19 @@ type Worker struct {
 	ctx     context.Context
 }
 
-func (w *Worker) SetMetrics(recs records) {
-	list, err := w.result.SetMetrics(recs)
+func (w *Worker) setQueryResultMetrics(recs records) {
+	err := w.result.SetMetrics(recs, w.query.ValueOnError)
 	if err != nil {
 		w.log.Printf("Error setting metrics: %s", err)
 		return
 	}
-
-	w.result.RegisterMetrics(list)
 }
 
-func (w *Worker) Fetch(url string) (records, error) {
+func (w *Worker) queryResultError() {
+	w.setQueryResultMetrics(nil)
+}
+
+func (w *Worker) fetchRecords(url string) error {
 	var (
 		t    time.Time
 		err  error
@@ -81,24 +84,18 @@ func (w *Worker) Fetch(url string) (records, error) {
 		if err == nil {
 			break
 		}
+		w.log.Print(err)
 
-		if w.query.ValueOnError != "" {
-			w.SetMetrics([]record{
-				map[string]interface{}{
-					"error": w.query.ValueOnError,
-				},
-			})
-		}
+		w.queryResultError()
 
 		// Backoff on an error.
-		w.log.Print(err)
 		d := w.backoff.Duration()
 		w.log.Printf("Backing off for %s", d)
 		select {
 		case <-time.After(d):
 			continue
 		case <-w.ctx.Done():
-			return nil, errors.New("Execution was canceled")
+			return errors.New("Execution was canceled")
 		}
 	}
 
@@ -111,17 +108,18 @@ func (w *Worker) Fetch(url string) (records, error) {
 	defer resp.Body.Close()
 
 	if err = json.NewDecoder(resp.Body).Decode(&recs); err != nil {
-		return nil, err
+		return err
 	}
 
-	w.SetMetrics(recs)
+	w.setQueryResultMetrics(recs)
 
-	return recs, nil
+	return nil
 }
 
+// Start fetching data from specified URL
 func (w *Worker) Start(url string) {
 	tick := func() {
-		_, err := w.Fetch(url)
+		err := w.fetchRecords(url)
 		if err != nil {
 			w.log.Printf("Error fetching records: %s", err)
 			return

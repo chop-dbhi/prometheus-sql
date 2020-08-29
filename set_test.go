@@ -116,7 +116,7 @@ gauge: <
 }
 
 func (opts *testQuerySetOptions) testQuerySet(t *testing.T) {
-	_, err := opts.q.SetMetrics(opts.rec)
+	err := opts.q.SetMetrics(opts.rec, "")
 	if err != nil {
 		t.Errorf("Error while setting metrics: %v", err)
 		return

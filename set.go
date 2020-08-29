@@ -10,6 +10,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type record map[string]interface{}
+type records []record
+
 type metricStatus int
 
 const (
@@ -17,12 +20,13 @@ const (
 	unregistered
 )
 
+// QueryResult contains query results
 type QueryResult struct {
 	Query  *Query
 	Result map[string]prometheus.Gauge // Internally we represent each facet with a JSON-encoded string for simplicity
 }
 
-// NewSetMetrics initializes a new metrics collector.
+// NewQueryResult initializes a new metrics collector.
 func NewQueryResult(q *Query) *QueryResult {
 	r := &QueryResult{
 		Query:  q,
@@ -32,21 +36,30 @@ func NewQueryResult(q *Query) *QueryResult {
 	return r
 }
 
-func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string) (string, metricStatus) {
-	labels := prometheus.Labels{}
+func (r *QueryResult) generateMetricName(suffix string) string {
 	metricName := r.Query.Name
 	if suffix != "" {
 		metricName = fmt.Sprintf("%s_%s", r.Query.Name, suffix)
 	}
+	return metricName
+}
 
+func (r *QueryResult) generateMetricUniqueKey(facets map[string]interface{}, suffix string) string {
 	jsonData, _ := json.Marshal(facets)
-	resultKey := fmt.Sprintf("%s%s", metricName, string(jsonData))
+	return fmt.Sprintf("%s%s", r.generateMetricName(suffix), string(jsonData))
+}
 
+func (r *QueryResult) createMetric(facets map[string]interface{}, suffix string) (string, metricStatus) {
+	metricName := r.generateMetricName(suffix)
+	resultKey := r.generateMetricUniqueKey(facets, suffix)
+
+	labels := prometheus.Labels{}
 	for k, v := range facets {
 		labels[k] = strings.ToLower(fmt.Sprintf("%v", v))
 	}
 
-	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
+	if _, ok := r.Result[resultKey]; ok {
+		// A metric with this key is already created and assumed to be registered
 		return resultKey, registered
 	}
 
@@ -58,9 +71,6 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 	})
 	return resultKey, unregistered
 }
-
-type record map[string]interface{}
-type records []record
 
 func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	switch t := v.(type) {
@@ -80,14 +90,34 @@ func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	return nil
 }
 
-func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) {
+// SetMetrics set and register metrics
+func (r *QueryResult) SetMetrics(recs records, valueOnError string) error {
 	// Queries that return only one record should only have one column
 	if len(recs) > 1 && len(recs[0]) == 1 {
-		return nil, errors.New("There is more than one row in the query result - with a single column")
+		return errors.New("There is more than one row in the query result - with a single column")
 	}
 
 	if r.Query.DataField != "" && len(r.Query.SubMetrics) > 0 {
-		return nil, errors.New("sub-metrics are not compatible with data-field")
+		return errors.New("sub-metrics are not compatible with data-field")
+	}
+
+	// We need to make sure not to default to a value on error before
+	// it has been registered once before since re-registering might
+	// not work if different labels are used.
+	if len(recs) == 0 && valueOnError != "" {
+		metricSet := false
+		for k := range r.Result {
+			if strings.HasPrefix(k, r.generateMetricName("")) {
+				err := setValueForResult(r.Result[k], valueOnError)
+				if err != nil {
+					return err
+				}
+				metricSet = true
+			}
+		}
+		if metricSet {
+			return nil
+		}
 	}
 
 	submetrics := map[string]string{}
@@ -120,7 +150,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 					}
 				} else { // this is the actual gauge data
 					if dataFound {
-						return nil, errors.New("Data field not specified for multi-column query")
+						return errors.New("Data field not specified for multi-column query")
 					}
 					dataVal = v
 					dataFound = true
@@ -128,22 +158,23 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 			}
 
 			if !dataFound {
-				return nil, errors.New("Data field not found in result set")
+				return errors.New("Data field not found in result set")
 			}
 
-			key, status := r.registerMetric(facet, suffix)
+			key, status := r.createMetric(facet, suffix)
 			err := setValueForResult(r.Result[key], dataVal)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			facetsWithResult[key] = status
 		}
 	}
-
-	return facetsWithResult, nil
+	r.registerMetrics(facetsWithResult)
+	return nil
 }
 
-func (r *QueryResult) RegisterMetrics(facetsWithResult map[string]metricStatus) {
+// RegisterMetrics registers and unregister gauges
+func (r *QueryResult) registerMetrics(facetsWithResult map[string]metricStatus) {
 	for key, m := range r.Result {
 		status, ok := facetsWithResult[key]
 		if !ok {
