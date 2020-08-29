@@ -101,7 +101,6 @@ func (r *QueryResult) SetMetrics(recs records, valueOnError string) error {
 		return errors.New("sub-metrics are not compatible with data-field")
 	}
 
-	processRecs := recs
 	submetrics := map[string]string{}
 
 	if len(r.Query.SubMetrics) > 0 {
@@ -130,7 +129,7 @@ func (r *QueryResult) SetMetrics(recs records, valueOnError string) error {
 	}
 
 	facetsWithResult := make(map[string]metricStatus, 0)
-	for _, row := range processRecs {
+	for _, row := range recs {
 		for suffix, datafield := range submetrics {
 			facet := make(map[string]interface{})
 			var (
