@@ -101,21 +101,13 @@ func (r *QueryResult) SetMetrics(recs records, valueOnError string) error {
 		return errors.New("sub-metrics are not compatible with data-field")
 	}
 
-	submetrics := map[string]string{}
-
-	if len(r.Query.SubMetrics) > 0 {
-		submetrics = r.Query.SubMetrics
-	} else {
-		submetrics = map[string]string{"": r.Query.DataField}
-	}
-
 	// We need to make sure not to default to a value on error before
 	// it has been registered once before since re-registering might
 	// not work if different labels are used.
-	metricSet := false
-	for k := range r.Result {
-		if strings.HasPrefix(k, r.generateMetricName("")) {
-			if len(recs) == 0 && valueOnError != "" {
+	if len(recs) == 0 && valueOnError != "" {
+		metricSet := false
+		for k := range r.Result {
+			if strings.HasPrefix(k, r.generateMetricName("")) {
 				err := setValueForResult(r.Result[k], valueOnError)
 				if err != nil {
 					return err
@@ -123,9 +115,17 @@ func (r *QueryResult) SetMetrics(recs records, valueOnError string) error {
 				metricSet = true
 			}
 		}
+		if metricSet {
+			return nil
+		}
 	}
-	if metricSet {
-		return nil
+
+	submetrics := map[string]string{}
+
+	if len(r.Query.SubMetrics) > 0 {
+		submetrics = r.Query.SubMetrics
+	} else {
+		submetrics = map[string]string{"": r.Query.DataField}
 	}
 
 	facetsWithResult := make(map[string]metricStatus, 0)
