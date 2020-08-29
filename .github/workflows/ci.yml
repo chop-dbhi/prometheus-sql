@@ -35,8 +35,8 @@ jobs:
 
       - name: Check formatting
         run: |
-            chmod +x $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
-            $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
+          chmod +x $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
+          $GITHUB_WORKSPACE/scripts/gofmtcheck.sh
 
       - name: Linting
         if: matrix.os == 'linux'
