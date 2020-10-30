@@ -147,9 +147,8 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 
 			if histogram {
 				histogram_field := datafield[0 : len(datafield)-1]
-				for k, v := range histogram_data {
+				for k, dataVal := range histogram_data {
 					// loop over histogram data registering bins
-					dataVal = v
 					facet[histogram_field] = k
 
 					key, status := r.registerMetric(facet, suffix)
