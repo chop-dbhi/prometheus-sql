@@ -43,7 +43,7 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 	resultKey := fmt.Sprintf("%s%s", metricName, string(jsonData))
 
 	for k, v := range facets {
-		labels[k] = fmt.Sprintf("%v", v)
+		labels[k] = labelCaseChange(fmt.Sprintf("%v", v))
 	}
 
 	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
@@ -107,12 +107,13 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 				dataVal   interface{}
 				dataFound bool
 			)
+			datafield = labelCaseChange(datafield)
 			histogram_data := make(map[string]interface{})
 			histogram := (datafield[len(datafield)-1:] == "#")
 			for k, v := range row {
 				if len(row) > 1 && k != datafield {
-					k_str := fmt.Sprintf("%v", k)
-					if histogram && strings.HasPrefix(k_str, datafield) {
+					k := labelCaseChange(fmt.Sprintf("%v", k))
+					if histogram && strings.HasPrefix(k, datafield) {
 						// histogram field, add to histogram_data
 						histogram_data[k[len(datafield):]] = v
 						dataFound = true
@@ -120,20 +121,20 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 						// facet field, add to facets
 						submetric := false
 						for _, n := range submetrics {
-							if k == n {
+							if k == labelCaseChange(n) {
 								submetric = true
-							} else if strings.Contains(n, "#") && strings.HasPrefix(k, n) {
+							} else if strings.Contains(n, "#") && strings.HasPrefix(k, labelCaseChange(n)) {
 								submetric = true
 							}
 						}
 						// it is a facet field and not a submetric field
 						if !submetric {
-							facet[k_str] = v
+							facet[k] = v
 						}
 					}
 				} else { // this is the actual gauge data
 					if dataFound {
-						return nil, errors.New("Data field not specified for multi-column query")
+						return nil, errors.New(fmt.Sprintf("Data field '%v' not specified for multi-column query", datafield))
 					}
 					dataVal = v
 					dataFound = true
@@ -141,7 +142,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 			}
 
 			if !dataFound {
-				return nil, errors.New("Data field not found in result set")
+				return nil, errors.New(fmt.Sprintf("Data field '%v' not found in result set", datafield))
 			}
 
 			if histogram {
@@ -188,4 +189,7 @@ func (r *QueryResult) RegisterMetrics(facetsWithResult map[string]metricStatus) 
 			}(key, m)
 		}
 	}
+}
+func labelCaseChange(str string) string {
+	return string(strings.ToLower(str[0:1])) + str[1:]
 }
