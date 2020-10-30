@@ -88,11 +88,11 @@
                count(CASE WHEN response_time > 1 AND response_time <= 2 THEN 1 END) as 'le#2',
                count(CASE WHEN response_time > 2 AND response_time <= 3 THEN 1 END) as 'le#3',
                count(CASE WHEN response_time > 3 THEN 1 END) as 'le#+Inf',
-               sum(response_time) s, count(response_time) c
+               sum(response_time) as s, count(response_time) as c
           from stats
     sub-metrics:
-      bucket: 'responseHistogram#'
-      total: 't'
+      bucket: 'le#'
+      total: 's'
       count: 'c'
     interval: 30s
 
@@ -100,11 +100,14 @@
 # This will register an extra field intended to be used for labeling such as the case when two or
 # more databases have similar records and you with to set a custom field for identifying the database:
 # - last_login_time is generated with overlapping metric label 'systemName'
+# - keep-case will allow uppercase keys and values to be passed to prometheus
 - last_login_time:
+    keep-case: true
     sql: >
         select *, 'user_portal_database' as 'systemName' from logins
     interval: 30s
 - last_login_time:
+    keep-case: true
     sql: >
         select *, 'user_registration_database' as 'systemName' from logins
     interval: 30s
