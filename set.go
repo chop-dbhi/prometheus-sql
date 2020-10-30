@@ -43,7 +43,7 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 	resultKey := fmt.Sprintf("%s%s", metricName, string(jsonData))
 
 	for k, v := range facets {
-		labels[k] = strings.ToLower(fmt.Sprintf("%v", v))
+		labels[k] = fmt.Sprintf("%v", v)
 	}
 
 	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
@@ -107,17 +107,29 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 				dataVal   interface{}
 				dataFound bool
 			)
+			histogram_data := make(map[string]interface{})
+			histogram := (datafield[len(datafield)-1:] == "#")
 			for k, v := range row {
-				if len(row) > 1 && strings.ToLower(k) != datafield { // facet field, add to facets
-					submetric := false
-					for _, n := range submetrics {
-						if strings.ToLower(k) == n {
-							submetric = true
+				if len(row) > 1 && k != datafield {
+					k_str := fmt.Sprintf("%v", k)
+					if histogram && strings.HasPrefix(k_str, datafield) {
+						// histogram field, add to histogram_data
+						histogram_data[k[len(datafield):]] = v
+						dataFound = true
+					} else {
+						// facet field, add to facets
+						submetric := false
+						for _, n := range submetrics {
+							if k == n {
+								submetric = true
+							} else if strings.Contains(n, "#") && strings.HasPrefix(k, n) {
+								submetric = true
+							}
 						}
-					}
-					// it is a facet field and not a submetric field
-					if !submetric {
-						facet[strings.ToLower(fmt.Sprintf("%v", k))] = v
+						// it is a facet field and not a submetric field
+						if !submetric {
+							facet[k_str] = v
+						}
 					}
 				} else { // this is the actual gauge data
 					if dataFound {
@@ -132,12 +144,28 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 				return nil, errors.New("Data field not found in result set")
 			}
 
-			key, status := r.registerMetric(facet, suffix)
-			err := setValueForResult(r.Result[key], dataVal)
-			if err != nil {
-				return nil, err
+			if histogram {
+				histogram_field := datafield[0 : len(datafield)-1]
+				for k, v := range histogram_data {
+					// loop over histogram data registering bins
+					dataVal = v
+					facet[histogram_field] = k
+
+					key, status := r.registerMetric(facet, suffix)
+					err := setValueForResult(r.Result[key], dataVal)
+					if err != nil {
+						return nil, err
+					}
+					facetsWithResult[key] = status
+				}
+			} else {
+				key, status := r.registerMetric(facet, suffix)
+				err := setValueForResult(r.Result[key], dataVal)
+				if err != nil {
+					return nil, err
+				}
+				facetsWithResult[key] = status
 			}
-			facetsWithResult[key] = status
 		}
 	}
 

@@ -193,7 +193,6 @@ func decodeQueries(r io.Reader, config *Config) (QueryList, error) {
 			if q.ValueOnError == "" && config.Defaults.QueryValueOnError != "" {
 				q.ValueOnError = config.Defaults.QueryValueOnError
 			}
-			q.DataField = strings.ToLower(q.DataField)
 			if err := validateQuery(q); err != nil {
 				return nil, err
 			}
