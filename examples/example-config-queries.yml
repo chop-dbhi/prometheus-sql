@@ -91,3 +91,17 @@
           from stats
     data-field: 'responseHistogram#'
     interval: 30s
+
+# Hard setting a field for easy labeling
+# This will register an extra field intended to be used for labeling such as the case when two or
+# more databases have similar records and you with to set a custom field for identifying the database:
+# - last_login_time is generated with overlapping metric label 'systemName'
+- last_login_time:
+    sql: >
+        select *, 'user_portal_database' as 'systemName' from logins
+    interval: 30s
+- last_login_time:
+    sql: >
+        select *, 'user_registration_database' as 'systemName' from logins
+    interval: 30s
+
