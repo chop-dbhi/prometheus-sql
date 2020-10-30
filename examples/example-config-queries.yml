@@ -82,14 +82,18 @@
 # Histogram queries
 # This will register an array of metrics intended for a histogram:
 # - responseHistogram with label values of 0,1,2, and 3 representing the bin for seconds taken
-- response_time_histogram:
+- response_times:
     sql: >
-        select count(CASE WHEN response_time >= 0 AND response_time < 1 THEN 1 END) as 'responseHistogram#0',
-        select count(CASE WHEN response_time >= 1 AND response_time < 2 THEN 1 END) as 'responseHistogram#1',
-        select count(CASE WHEN response_time >= 2 AND response_time < 3 THEN 1 END) as 'responseHistogram#2',
-        select count(CASE WHEN response_time >= 3 THEN 1 END) as 'responseHistogram#3'
+        select count(CASE WHEN response_time >= 0 AND response_time <= 1 THEN 1 END) as 'le#1',
+               count(CASE WHEN response_time > 1 AND response_time <= 2 THEN 1 END) as 'le#2',
+               count(CASE WHEN response_time > 2 AND response_time <= 3 THEN 1 END) as 'le#3',
+               count(CASE WHEN response_time > 3 THEN 1 END) as 'le#+Inf',
+               sum(response_time) s, count(response_time) c
           from stats
-    data-field: 'responseHistogram#'
+    sub-metrics:
+      bucket: 'responseHistogram#'
+      total: 't'
+      count: 'c'
     interval: 30s
 
 # Hard setting a field for easy labeling
