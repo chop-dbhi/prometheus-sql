@@ -43,7 +43,7 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 	resultKey := fmt.Sprintf("%s%s", metricName, string(jsonData))
 
 	for k, v := range facets {
-		labels[k] = labelCaseChange(fmt.Sprintf("%v", v))
+		labels[k] = fmt.Sprintf("%v", v)
 	}
 
 	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
