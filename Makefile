@@ -8,7 +8,7 @@ GIT_BRANCH := $(shell git symbolic-ref -q --short HEAD)
 GIT_VERSION := $(shell git log -1 --pretty=format:"%h (%ci)" .)
 
 build:
-	go build -ldflags "-X \"main.buildVersion=$(GIT_VERSION)\"" \
+	CGO_ENABLED=0 go build -ldflags "-X \"main.buildVersion=$(GIT_VERSION)\"" \
 		-o $(GOPATH)/bin/$(PROG_NAME) $(CMD_PATH)
 
 dist-build:

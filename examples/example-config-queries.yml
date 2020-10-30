@@ -19,6 +19,7 @@
 # insert into Companies (name, country) values ('Company1', 'IRL');
 # insert into Companies (name, country) values ('Company2', 'IRL');
 #
+#
 # select * from Companies;
 # +----------+---------+
 # | name     | country |
@@ -28,6 +29,19 @@
 # | Company1 | IRL     |
 # | Company2 | IRL     |
 # +----------+---------+
+# 4 rows in set (0.00 sec)
+#
+# -- Should you want to change the column name or upper case / lower case a column use 'as'
+# --   note: the first character must be a lowercase character for grafana
+# select name as companyName from Companies;
+# +-------------+
+# | companyName |
+# +-------------+
+# | Company1    |
+# | Company1    |
+# | Company1    |
+# | Company2    |
+# +-------------+
 # 4 rows in set (0.00 sec)
 #
 # quit
@@ -63,4 +77,17 @@
     sub-metrics:
       count: cnt
       sum: rt
+    interval: 30s
+
+# Histogram queries
+# This will register an array of metrics intended for a histogram:
+# - responseHistogram with label values of 0,1,2, and 3 representing the bin for seconds taken
+- response_time_histogram:
+    sql: >
+        select count(CASE WHEN response_time >= 0 AND response_time < 1 THEN 1 END) as 'responseHistogram#0',
+        select count(CASE WHEN response_time >= 1 AND response_time < 2 THEN 1 END) as 'responseHistogram#1',
+        select count(CASE WHEN response_time >= 2 AND response_time < 3 THEN 1 END) as 'responseHistogram#2',
+        select count(CASE WHEN response_time >= 3 THEN 1 END) as 'responseHistogram#3'
+          from stats
+    data-field: 'responseHistogram#'
     interval: 30s
