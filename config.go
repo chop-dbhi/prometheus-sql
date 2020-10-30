@@ -56,6 +56,7 @@ type Query struct {
 	Params        map[string]interface{}
 	Interval      time.Duration
 	Timeout       time.Duration
+	PreserveCase  bool              `yaml:"keep-case"`
 	DataField     string            `yaml:"data-field"`
 	SubMetrics    map[string]string `yaml:"sub-metrics"`
 	ValueOnError  string            `yaml:"value-on-error"`

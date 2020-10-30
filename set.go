@@ -32,7 +32,7 @@ func NewQueryResult(q *Query) *QueryResult {
 	return r
 }
 
-func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string) (string, metricStatus) {
+func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string, keepCase bool) (string, metricStatus) {
 	labels := prometheus.Labels{}
 	metricName := r.Query.Name
 	if suffix != "" {
@@ -43,7 +43,11 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 	resultKey := fmt.Sprintf("%s%s", metricName, string(jsonData))
 
 	for k, v := range facets {
-		labels[k] = fmt.Sprintf("%v", v)
+		if keepCase {
+			labels[k] = fmt.Sprintf("%v", v)
+		} else {
+			labels[k] = strings.ToLower(fmt.Sprintf("%v", v))
+		}
 	}
 
 	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
@@ -91,6 +95,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 	}
 
 	submetrics := map[string]string{}
+	keepCase := (r.Query.PreserveCase == true)
 
 	if len(r.Query.SubMetrics) > 0 {
 		submetrics = r.Query.SubMetrics
@@ -106,12 +111,12 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 				dataVal   interface{}
 				dataFound bool
 			)
-			datafield = labelCaseChange(datafield)
+			datafield = labelCaseChange(datafield, keepCase)
 			histogram_data := make(map[string]interface{})
 			histogram := (datafield[len(datafield)-1:] == "#")
 			for k, v := range row {
 				if len(row) > 1 && k != datafield {
-					k := labelCaseChange(fmt.Sprintf("%v", k))
+					k := labelCaseChange(fmt.Sprintf("%v", k), keepCase)
 					if histogram && strings.HasPrefix(k, datafield) {
 						// histogram field, add to histogram_data
 						histogram_data[k[len(datafield):]] = v
@@ -120,9 +125,9 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 						// facet field, add to facets
 						submetric := false
 						for _, n := range submetrics {
-							if k == labelCaseChange(n) {
+							if k == labelCaseChange(n, keepCase) {
 								submetric = true
-							} else if strings.Contains(n, "#") && strings.HasPrefix(k, labelCaseChange(n)) {
+							} else if strings.Contains(n, "#") && strings.HasPrefix(k, labelCaseChange(n, keepCase)) {
 								submetric = true
 							}
 						}
@@ -150,7 +155,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 					// loop over histogram data registering bins
 					facet[histogram_field] = k
 
-					key, status := r.registerMetric(facet, suffix)
+					key, status := r.registerMetric(facet, suffix, keepCase)
 					err := setValueForResult(r.Result[key], dataVal)
 					if err != nil {
 						return nil, err
@@ -158,7 +163,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 					facetsWithResult[key] = status
 				}
 			} else {
-				key, status := r.registerMetric(facet, suffix)
+				key, status := r.registerMetric(facet, suffix, keepCase)
 				err := setValueForResult(r.Result[key], dataVal)
 				if err != nil {
 					return nil, err
@@ -188,6 +193,10 @@ func (r *QueryResult) RegisterMetrics(facetsWithResult map[string]metricStatus) 
 		}
 	}
 }
-func labelCaseChange(str string) string {
-	return string(strings.ToLower(str[0:1])) + str[1:]
+func labelCaseChange(str string, keepCase bool) string {
+	if keepCase {
+		return string(strings.ToLower(str[0:1])) + str[1:]
+	} else {
+		return strings.ToLower(str)
+	}
 }
