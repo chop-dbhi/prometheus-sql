@@ -108,7 +108,9 @@
     interval: 30s
 - last_login_time:
     keep-case: true
+    labels:
+      systemName: user_registration_database
     sql: >
-        select *, 'user_registration_database' as 'systemName' from logins
+        select * from logins
     interval: 30s
 

@@ -95,6 +95,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 	}
 
 	submetrics := map[string]string{}
+	extralabels := map[string]string{}
 	keepCase := (r.Query.PreserveCase == true)
 
 	if len(r.Query.SubMetrics) > 0 {
@@ -103,10 +104,17 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 		submetrics = map[string]string{"": r.Query.DataField}
 	}
 
+	if len(r.Query.ExtraLabels) > 0 {
+		extralabels = r.Query.ExtraLabels
+	}
+
 	facetsWithResult := make(map[string]metricStatus, 0)
 	for _, row := range recs {
 		for suffix, datafield := range submetrics {
 			facet := make(map[string]interface{})
+			for k, v := range extralabels {
+				facet[k] = v
+			}
 			var (
 				dataVal   interface{}
 				dataFound bool
