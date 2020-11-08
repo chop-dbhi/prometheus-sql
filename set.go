@@ -32,7 +32,7 @@ func NewQueryResult(q *Query) *QueryResult {
 	return r
 }
 
-func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string, keepCase bool) (string, metricStatus) {
+func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix string, keepCase bool, helpText string) (string, metricStatus) {
 	labels := prometheus.Labels{}
 	metricName := r.Query.Name
 	if suffix != "" {
@@ -54,10 +54,14 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 		return resultKey, registered
 	}
 
+	if len(helpText) == 0 {
+		helpText = "Result of an SQL query"
+	}
+
 	fmt.Println("Creating", resultKey)
 	r.Result[resultKey] = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        fmt.Sprintf("query_result_%s", metricName),
-		Help:        "Result of an SQL query",
+		Help:        helpText,
 		ConstLabels: labels,
 	})
 	return resultKey, unregistered
@@ -163,7 +167,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 					// loop over histogram data registering bins
 					facet[histogram_field] = k
 
-					key, status := r.registerMetric(facet, suffix, keepCase)
+					key, status := r.registerMetric(facet, suffix, keepCase, r.Query.HelpText)
 					err := setValueForResult(r.Result[key], dataVal)
 					if err != nil {
 						return nil, err
@@ -171,7 +175,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 					facetsWithResult[key] = status
 				}
 			} else {
-				key, status := r.registerMetric(facet, suffix, keepCase)
+				key, status := r.registerMetric(facet, suffix, keepCase, r.Query.HelpText)
 				err := setValueForResult(r.Result[key], dataVal)
 				if err != nil {
 					return nil, err

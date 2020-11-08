@@ -48,6 +48,9 @@
     # Name of the driver to use.
     driver: postgresql
 
+    # Help text about query
+    help-text: "Result of an SQL query on example.org"
+
     # Connection information.
     connection:
         host: example.org

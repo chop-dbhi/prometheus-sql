@@ -58,6 +58,7 @@ type Query struct {
 	Timeout       time.Duration
 	PreserveCase  bool              `yaml:"keep-case"`
 	DataField     string            `yaml:"data-field"`
+	HelpText      string            `yaml:"help-text"`
 	SubMetrics    map[string]string `yaml:"sub-metrics"`
 	ExtraLabels   map[string]string `yaml:"labels"`
 	ValueOnError  string            `yaml:"value-on-error"`
