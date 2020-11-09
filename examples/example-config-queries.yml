@@ -102,7 +102,7 @@
 # - last_login_time is generated with overlapping metric label 'systemName'
 # - label-case and value-case will alter the case of keys and values before being passed to prometheus
 #     possible values for label-case and value-case are:
-#      - lower - lower case of the string ('MyVal' -> 'myval') -- default --
+#      - lower - lower case the string ('MyVal' -> 'myval') -- default --
 #      - upper - upper case the string ('MyVal' -> 'MYVAL')
 #      - first - lower case the initial character ('MyVal' -> 'myVal')
 #      - title - upper case the initial character ('myval' -> 'Myval')
