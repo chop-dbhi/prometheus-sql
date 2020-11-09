@@ -100,14 +100,22 @@
 # This will register an extra field intended to be used for labeling such as the case when two or
 # more databases have similar records and you with to set a custom field for identifying the database:
 # - last_login_time is generated with overlapping metric label 'systemName'
-# - keep-case will allow uppercase keys and values to be passed to prometheus
+# - label-case and value-case will alter the case of keys and values before being passed to prometheus
+#     possible values for label-case and value-case are:
+#      - lower - lower case of the string ('MyVal' -> 'myval') -- default --
+#      - upper - upper case the string ('MyVal' -> 'MYVAL')
+#      - first - lower case the initial character ('MyVal' -> 'myVal')
+#      - title - upper case the initial character ('myval' -> 'Myval')
+#      - keep - leave the case alone and pass as untouched ('MyVal' -> 'MyVal')
 - last_login_time:
-    keep-case: true
+    label-case: lower
+    value-case: lower
     sql: >
         select *, 'user_portal_database' as 'systemName' from logins
     interval: 30s
 - last_login_time:
-    keep-case: true
+    label-case: first 
+    value-case: keep
     labels:
       systemName: user_registration_database
     sql: >
