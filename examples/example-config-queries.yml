@@ -32,7 +32,6 @@
 # 4 rows in set (0.00 sec)
 #
 # -- Should you want to change the column name or upper case / lower case a column use 'as'
-# --   note: the first character must be a lowercase character for grafana
 # select name as companyName from Companies;
 # +-------------+
 # | companyName |
