@@ -14,3 +14,4 @@ EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/prometheus-sql", "-host", "0.0.0.0"]
 # Default command assumes the SQL agent is linked.
 CMD ["-service", "http://sqlagent:5000"]
+
