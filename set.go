@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"math"
 	"strconv"
 	"strings"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type metricStatus int
@@ -68,6 +68,8 @@ type records []record
 
 func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	switch t := v.(type) {
+	case nil:
+		r.Set(math.NaN())
 	case string:
 		f, err := strconv.ParseFloat(t, 64)
 		if err != nil {
