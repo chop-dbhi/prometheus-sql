@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+type record map[string]interface{}
+type records []record
+
 type metricStatus int
 
 const (
@@ -17,12 +20,13 @@ const (
 	unregistered
 )
 
+// QueryResult contains query results
 type QueryResult struct {
 	Query  *Query
 	Result map[string]prometheus.Gauge // Internally we represent each facet with a JSON-encoded string for simplicity
 }
 
-// NewSetMetrics initializes a new metrics collector.
+// NewQueryMetrics initializes a new metrics collector.
 func NewQueryResult(q *Query) *QueryResult {
 	r := &QueryResult{
 		Query:  q,
@@ -46,7 +50,8 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 		labels[k] = CaseChange(fmt.Sprintf("%v", v), valueCase)
 	}
 
-	if _, ok := r.Result[resultKey]; ok { // A metric with this name is already registered
+	if _, ok := r.Result[resultKey]; ok {
+		// A metric with this key is already created and assumed to be registered
 		return resultKey, registered
 	}
 
@@ -62,9 +67,6 @@ func (r *QueryResult) registerMetric(facets map[string]interface{}, suffix strin
 	})
 	return resultKey, unregistered
 }
-
-type record map[string]interface{}
-type records []record
 
 func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	switch t := v.(type) {
@@ -187,6 +189,7 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 	return facetsWithResult, nil
 }
 
+// RegisterMetrics registers and unregister gauges
 func (r *QueryResult) RegisterMetrics(facetsWithResult map[string]metricStatus) {
 	for key, m := range r.Result {
 		status, ok := facetsWithResult[key]
