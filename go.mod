@@ -10,5 +10,5 @@ require (
 	github.com/prometheus/common v0.13.0 // indirect
 	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	gopkg.in/tylerb/graceful.v1 v1.2.15
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 )
