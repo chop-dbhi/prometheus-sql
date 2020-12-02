@@ -88,6 +88,7 @@ func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	return nil
 }
 
+// SetMetrics set and register metrics
 func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) {
 	// Queries that return only one record should only have one column
 	if len(recs) > 1 && len(recs[0]) == 1 {
@@ -128,8 +129,8 @@ func (r *QueryResult) SetMetrics(recs records) (map[string]metricStatus, error) 
 			histogram_data := make(map[string]interface{})
 			histogram := (datafield[len(datafield)-1:] == "#")
 			for k, v := range row {
+				k := CaseChange(fmt.Sprintf("%v", k), labelCase)
 				if len(row) > 1 && k != datafield {
-					k := CaseChange(fmt.Sprintf("%v", k), labelCase)
 					if histogram && strings.HasPrefix(k, datafield) {
 						// histogram field, add to histogram_data
 						histogram_data[k[len(datafield):]] = v
