@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](../../releases/tag/X.Y.Z)
 
+## [1.4.2](../../releases/tag/1.4.2) - 2021-06-12
+
 ### Fixed
 
 - panic: runtime error: invalid memory address or nil pointer dereference bug ([#65](../../issues/65))
@@ -16,6 +18,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bump golang from 1.15.5 to 1.16.5
 
 ## [1.4.1](../../releases/tag/1.4.1) - 2020-08-29
+
+### Fixed
 
 - Panic when there is a query execution related error (#54)
 - Minor refactoring
