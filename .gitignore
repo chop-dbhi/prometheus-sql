@@ -9,4 +9,5 @@ gox
 .vscode
 debug
 debug.test
-
+__debug_bin
+/dev/
