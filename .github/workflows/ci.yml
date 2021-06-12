@@ -41,7 +41,7 @@ jobs:
       - name: Linting
         if: matrix.os == 'linux'
         run: |
-          go get -u golang.org/x/lint/golint
+          go install golang.org/x/lint/golint@latest
           golint .
 
       - name: Get short commit hash and date
