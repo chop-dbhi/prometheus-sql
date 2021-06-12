@@ -11,6 +11,10 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
+      - name: Get version from GITHUB_REF
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -19,6 +23,10 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
+          body: |
+            See changelog [here](https://github.com/chop-dbhi/prometheus-sql/blob/${{ steps.get_version.outputs.VERSION }}/CHANGELOG.md)
+          draft: false
+          prerelease: false
 
   release_pkg:
     name: Build release packages
