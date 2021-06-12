@@ -15,7 +15,7 @@ import (
 
 // Default config values
 var (
-	DefaultHost                         = ""
+	DefaultHost                         = "0.0.0.0"
 	DefaultTimeout                      = time.Minute
 	DefaultInterval                     = time.Minute * 5
 	DefaultService                      = ""
