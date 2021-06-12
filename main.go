@@ -88,10 +88,8 @@ func main() {
 
 	for _, q := range queries {
 		// Create a new worker and start it in its own goroutine.
-		// type key string
-		// const wgKey key = "wg"
-		w = NewWorker(context.WithValue(ctx, contextKey("wg"), wg), q)
-		go w.Start(service)
+		w = NewWorker(ctx, q)
+		go w.Start(service, wg)
 	}
 
 	// Register the handler.

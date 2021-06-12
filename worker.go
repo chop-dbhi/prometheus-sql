@@ -117,7 +117,7 @@ func (w *Worker) fetchRecords(url string) error {
 }
 
 // Start fetching data from specified URL
-func (w *Worker) Start(url string) {
+func (w *Worker) Start(url string, wg *sync.WaitGroup) {
 	tick := func() {
 		err := w.fetchRecords(url)
 		if err != nil {
@@ -132,7 +132,6 @@ func (w *Worker) Start(url string) {
 	for {
 		select {
 		case <-w.ctx.Done():
-			wg, _ := w.ctx.Value("wg").(*sync.WaitGroup)
 			wg.Done()
 			w.log.Printf("Stopping worker")
 			return
