@@ -144,3 +144,22 @@ func (opts *testQuerySetOptions) testQuerySet(t *testing.T) {
 	}
 
 }
+
+func TestNilValue(t *testing.T) {
+	(&testQuerySetOptions{
+		q: NewQueryResult(&Query{
+			Name: "nil_metric",
+		}),
+		rec: records{
+			record{
+				"value": nil,
+			},
+		},
+		results: map[string]string{
+			"nil_metric{}": `gauge: <
+  value: nan
+>
+`,
+		},
+	}).testQuerySet(t)
+}
