@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -74,6 +75,8 @@ func (r *QueryResult) createMetric(facets map[string]interface{}, suffix string)
 
 func setValueForResult(r prometheus.Gauge, v interface{}) error {
 	switch t := v.(type) {
+	case nil:
+		r.Set(math.NaN())
 	case string:
 		f, err := strconv.ParseFloat(t, 64)
 		if err != nil {
