@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](../../releases/tag/X.Y.Z)
 
+### Fixed
+
+- Unhandled type error when data field exists and data value is null ([#10](../../issues/10))
+
 ## [1.4.2](../../releases/tag/1.4.2) - 2021-06-12
 
 ### Fixed

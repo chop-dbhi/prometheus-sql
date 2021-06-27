@@ -10,6 +10,8 @@ Service that generates basic metrics for SQL result sets and exposing them as Pr
 
 This service relies on the [SQL Agent](https://github.com/chop-dbhi/sql-agent) service to execute and return the SQL result sets.
 
+[Changelog](https://github.com/chop-dbhi/prometheus-sql/blob/master/CHANGELOG.md)
+
 ## Behavior
 
 - Static configuration files are used to define the queries to monitor.
@@ -34,7 +36,7 @@ Usage of prometheus-sql:
   -config string
         Configuration file to define common data sources etc.
   -host string
-        Host of the service.
+        Host of the service. (0.0.0.0)
   -lax
         Tolerate invalid files in queryDir
   -port int
