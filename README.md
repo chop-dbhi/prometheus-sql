@@ -3,7 +3,6 @@
 [![GitHub release](https://img.shields.io/github/release/chop-dbhi/prometheus-sql.svg)](https://github.com/chop-dbhi/prometheus-sql)
 [![Github Releases](https://img.shields.io/github/downloads/chop-dbhi/prometheus-sql/latest/total.svg)](https://github.com/chop-dbhi/prometheus-sql/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/)
-[![Docker Build Status](https://img.shields.io/docker/build/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/builds/)
 [![GoDoc](https://godoc.org/github.com/chop-dbhi/prometheus-sql?status.svg)](https://godoc.org/github.com/chop-dbhi/prometheus-sql)
 
 Service that generates basic metrics for SQL result sets and exposing them as Prometheus metrics.
