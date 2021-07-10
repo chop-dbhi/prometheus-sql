@@ -1,5 +1,7 @@
 # Prometheus SQL
 
+*Docker tag `latest` is based on the same commit as the latest released version.*
+
 [![GitHub release](https://img.shields.io/github/release/chop-dbhi/prometheus-sql.svg)](https://github.com/chop-dbhi/prometheus-sql)
 [![Github Releases](https://img.shields.io/github/downloads/chop-dbhi/prometheus-sql/latest/total.svg)](https://github.com/chop-dbhi/prometheus-sql/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dbhi/prometheus-sql.svg)](https://hub.docker.com/r/dbhi/prometheus-sql/)
