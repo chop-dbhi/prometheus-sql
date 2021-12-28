@@ -28,7 +28,7 @@ jobs:
           context: .
 
       - name: Start containers
-        run: docker-compose -f "docker-compose.yml" -f "../../test-resources/docker-compose.test.yml" up -d
+        run: docker-compose -f "docker-compose.yml" -f "docker-compose.test.yml" up -d
         working-directory: ./examples/working_examples
 
       - name: Wait
@@ -36,7 +36,7 @@ jobs:
 
       - name: Stop containers
         if: always()
-        run: docker-compose -f "docker-compose.yml" -f "../../test-resources/docker-compose.test.yml" down
+        run: docker-compose -f "docker-compose.yml" -f "docker-compose.test.yml" down
         working-directory: ./examples/working_examples
 
   build_pkgs:
