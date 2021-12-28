@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Added support to specify help text for metrics ([#48](../../issues/48))
 - Bumped Go version to 1.17 and frolvlad/alpine-glibc.
 
 ### Internal
