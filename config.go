@@ -49,6 +49,7 @@ type DataSource struct {
 // Query defines a SQL statement and parameters as well as configuration for the monitoring behavior
 type Query struct {
 	Name          string
+	Help          string
 	DataSourceRef string `yaml:"data-source"`
 	Driver        string
 	Connection    map[string]interface{}

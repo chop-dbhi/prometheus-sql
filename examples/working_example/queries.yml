@@ -1,11 +1,13 @@
 # Use default data source
 - nr_companies_per_country:
+    help: Number of companies per country
     sql: >
         select country, count(1) as cnt from Companies group by country
     data-field: cnt
 
 # Missing database user, data source 'my-ds-missing-user' shall be used instead of the default 'my-ds'
 - error_missing_user:
+    help: Data source error
     data-source: my-ds-missing-user
     sql: >
         select * from dual
@@ -13,6 +15,7 @@
 
 # Missing table
 - error_missing_table:
+    help: Missing table
     sql: >
         select * from missing_table
     interval: 30s
@@ -22,6 +25,7 @@
 # - response_time_count with cnt as value
 # - response_time_sum with rt as value
 - response_time:
+    help: Sub metrics
     sql: >
         select count(*) as cnt, sum(response_time) as rt from Requests
     sub-metrics:
