@@ -1,11 +1,11 @@
 # Requires Docker v17.06 or later
-FROM golang:1.16.7 as builder
+FROM golang:1.17.5 as builder
 RUN mkdir -p /go/src/app
 WORKDIR /go/src/app
 COPY . /go/src/app
 RUN go build -v .
 
-FROM frolvlad/alpine-glibc:alpine-3.12_glibc-2.32
+FROM frolvlad/alpine-glibc:alpine-3.15_glibc-2.33
 
 COPY --from=builder /go/src/app/prometheus-sql /usr/local/bin/prometheus-sql
 

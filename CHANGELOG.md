@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](../../releases/tag/X.Y.Z)
 
+### Fixed
+
+- Bumped Go version to 1.17 and frolvlad/alpine-glibc.
+
+### Internal
+
+- Update Github CI workflow.
+
 ## [1.4.3](../../releases/tag/1.4.3) - 2021-07-10
 
 ### Fixed
