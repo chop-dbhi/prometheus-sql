@@ -50,7 +50,7 @@ func (r *QueryResult) generateMetricUniqueKey(facets map[string]interface{}, suf
 	return fmt.Sprintf("%s%s", r.generateMetricName(suffix), string(jsonData))
 }
 
-func (r *QueryResult) createMetric(facets map[string]interface{}, suffix string) (string, metricStatus) {
+func (r *QueryResult) createMetric(facets map[string]interface{}, suffix string, help string) (string, metricStatus) {
 	metricName := r.generateMetricName(suffix)
 	resultKey := r.generateMetricUniqueKey(facets, suffix)
 
@@ -64,10 +64,14 @@ func (r *QueryResult) createMetric(facets map[string]interface{}, suffix string)
 		return resultKey, registered
 	}
 
+	if len(help) == 0 {
+		help = "Result of an SQL query"
+	}
+
 	fmt.Println("Creating", resultKey)
 	r.Result[resultKey] = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        fmt.Sprintf("query_result_%s", metricName),
-		Help:        "Result of an SQL query",
+		Help:        help,
 		ConstLabels: labels,
 	})
 	return resultKey, unregistered
@@ -164,7 +168,7 @@ func (r *QueryResult) SetMetrics(recs records, valueOnError string) error {
 				return errors.New("Data field not found in result set")
 			}
 
-			key, status := r.createMetric(facet, suffix)
+			key, status := r.createMetric(facet, suffix, r.Query.Help)
 			err := setValueForResult(r.Result[key], dataVal)
 			if err != nil {
 				return err

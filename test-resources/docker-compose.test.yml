@@ -1,0 +1,15 @@
+version: "2.4"
+services:
+    prometheus-sql:
+        image: dbhi/prometheus-sql:test
+        links:
+            - sqlagent:sqlagent
+        depends_on:
+            - sqlagent
+        ports:
+            - 8080:8080
+        command:
+            - -config
+            - /config.yml
+            - -service
+            - http://sqlagent:5000

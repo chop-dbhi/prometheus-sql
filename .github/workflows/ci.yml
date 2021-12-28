@@ -13,6 +13,8 @@ jobs:
   build_docker:
     name: Build Docker
     runs-on: ubuntu-latest
+    env:
+      TEST_TAG: dbhi/prometheus-sql:test
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
@@ -24,8 +26,20 @@ jobs:
         uses: docker/build-push-action@v2.7.0
         with:
           load: true
-          tags: test
+          tags: ${{ env.TEST_TAG }}
           context: .
+
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" -f "../../test-resources/docker-compose.test.yml" up -d
+      working-directory: ./examples/working_examples
+
+    - name: Wait
+      run: sleep 10 && curl http://localhost:8080/metrics
+
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" -f "../../test-resources/docker-compose.test.yml" down
+      working-directory: ./examples/working_examples
 
   build_pkgs:
     name: Build Packages
