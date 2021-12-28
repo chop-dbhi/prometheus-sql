@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - '*'
+env:
+  GOLANG_VERSION: 1.17
 
 jobs:
   create_release:
@@ -60,7 +62,7 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.15
+          go-version: ^${{ env.GOLANG_VERSION }}
         id: go
 
       - name: Check out code into the Go module directory
