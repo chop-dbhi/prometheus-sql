@@ -44,7 +44,7 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ^${{ GOLANG_VERSION }}
+          go-version: ^${{ env.GOLANG_VERSION }}
         id: go
 
       - name: Check out code into the Go module directory
