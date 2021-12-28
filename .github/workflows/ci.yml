@@ -13,8 +13,6 @@ jobs:
   build_docker:
     name: Build Docker
     runs-on: ubuntu-latest
-    env:
-      TEST_TAG: dbhi/prometheus-sql:test
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
@@ -26,7 +24,7 @@ jobs:
         uses: docker/build-push-action@v2.7.0
         with:
           load: true
-          tags: ${{ env.TEST_TAG }}
+          tags: dbhi/prometheus-sql:test
           context: .
 
     - name: Start containers
