@@ -8,7 +8,6 @@ on:
 
 env:
   GOLANG_VERSION: 1.17
-  TEST_TAG: test
 
 jobs:
   build_docker:
@@ -25,7 +24,7 @@ jobs:
         uses: docker/build-push-action@v2.7.0
         with:
           load: true
-          tags: ${{ TEST_TAG }}
+          tags: test
           context: .
 
   build_pkgs:
