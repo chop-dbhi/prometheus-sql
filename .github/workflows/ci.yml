@@ -31,8 +31,8 @@ jobs:
         run: docker-compose -f "docker-compose.yml" -f "docker-compose.test.yml" up -d
         working-directory: ./examples/working_example
 
-      - name: Wait
-        run: sleep 10 && curl http://localhost:8080/metrics
+      - name: Wait and Test Metrics Endpoint
+        run: sleep 30 && curl http://localhost:8080/metrics
 
       - name: Stop containers
         if: always()
