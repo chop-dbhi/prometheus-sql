@@ -5,7 +5,7 @@ WORKDIR /go/src/app
 COPY . /go/src/app
 RUN go build -v .
 
-FROM frolvlad/alpine-glibc:alpine-3.15_glibc-2.33
+FROM frolvlad/alpine-glibc:alpine-3.16_glibc-2.34
 
 COPY --from=builder /go/src/app/prometheus-sql /usr/local/bin/prometheus-sql
 
