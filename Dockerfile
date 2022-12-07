@@ -1,5 +1,5 @@
 # Requires Docker v17.06 or later
-FROM golang:1.18.3 as builder
+FROM golang:1.19.4 as builder
 RUN mkdir -p /go/src/app
 WORKDIR /go/src/app
 COPY . /go/src/app
